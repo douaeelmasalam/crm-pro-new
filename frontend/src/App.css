@@ -1,0 +1,105 @@
+.login-container {
+    display: flex;
+    height: 100vh; /* Pour occuper toute la hauteur de la fenêtre */
+    font-family: sans-serif;
+  }
+  
+  .login-left,
+  .login-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 50%;
+  }
+  
+  .login-left {
+    background-color: #092e47; /* Couleur bleue de l'image */
+    color: white;
+  }
+  
+  .login-left h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+  }
+  
+  .login-left p {
+    font-size: 1em;
+  }
+  
+  .login-right {
+    background-color: white;
+    padding: 40px;
+  }
+  
+  .login-right h2 {
+    font-size: 2em;
+    margin-bottom: 5px;
+    color: #333;
+    align-self: flex-start;
+  }
+  
+  .login-right p {
+    color: #777;
+    margin-bottom: 20px;
+    align-self: flex-start;
+  }
+  
+  .login-right form {
+    display: flex;
+    flex-direction: column;
+    width: 80%;
+    max-width: 300px;
+  }
+  
+  .input-group {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .input-group label {
+    margin-bottom: 5px;
+    color: #333;
+  }
+  
+  .input-group input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .login-button {
+    background-color: #3498db; /* Couleur bleue du bouton */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+  }
+  
+  .login-button:hover {
+    background-color: #2980b9;
+  }
+  
+  .forgot-password {
+    color: #3498db;
+    font-size: 0.9em;
+    margin-top: 15px;
+    text-align: left;
+    align-self: flex-start;
+    cursor: pointer;
+  }
+  
+  .error-message {
+    color: red;
+    margin-top: 10px;
+    align-self: flex-start;
+  }
+  
