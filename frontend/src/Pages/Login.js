@@ -5,7 +5,6 @@ import { useState } from 'react';
 function Login({ setIsLoggedIn, setUserRole, setMessage, message }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setrole] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();

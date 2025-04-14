@@ -97,7 +97,7 @@ const CreateUserForm = () => {
           value={formData.role}
           onChange={handleChange}
         >
-          <option value="user">Utilisateur</option>
+          <option value="user">user</option>
           <option value="admin">Admin</option>
         </select>
       </div>

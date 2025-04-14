@@ -1,14 +1,17 @@
 import { useState } from 'react';
-import Login from './Pages/Login'; // Notez le "P" majuscule pour correspondre à votre dossier
-import AdminDashboard from './Pages/AdminDashboard'; // Utilisez le bon chemin
-import AgentDashboard from './Pages/AgentDashboard'; // Utilisez le bon chemin
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+import Login from './Pages/Login';
+import AdminDashboard from './Pages/AdminDashboard';
+import AgentDashboard from './Pages/AgentDashboard';
+import EditUserForm from './components/EditUserForm'; // adapte le chemin si besoin
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState('');
   const [message, setMessage] = useState('');
 
-  // Function to render the appropriate dashboard based on role
+  // Fonction qui retourne le bon tableau de bord
   const renderDashboard = () => {
     if (userRole === "admin") {
       return <AdminDashboard />;
@@ -20,18 +23,26 @@ function App() {
   };
 
   return (
-    <div>
-      {isLoggedIn ? (
-        renderDashboard()
-      ) : (
-        <Login 
-          setIsLoggedIn={setIsLoggedIn} 
-          setUserRole={setUserRole} 
-          setMessage={setMessage}
-          message={message}
-        />
-      )}
-    </div>
+    <Router>
+      <Routes>
+        {/* Page d’édition d’un utilisateur */}
+        <Route path="/admin/edit-user/:id" element={<EditUserForm />} />
+
+        {/* Page principale : login ou dashboard selon le statut */}
+        <Route path="/" element={
+          isLoggedIn ? (
+            renderDashboard()
+          ) : (
+            <Login
+              setIsLoggedIn={setIsLoggedIn}
+              setUserRole={setUserRole}
+              setMessage={setMessage}
+              message={message}
+            />
+          )
+        } />
+      </Routes>
+    </Router>
   );
 }
 

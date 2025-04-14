@@ -8,23 +8,23 @@ const UserList = () => {
   }, []);
 
   const fetchUsers = () => {
-    fetch("http://localhost:5000/api/users")  // Remplacer par l'URL complète
+    fetch("http://localhost:5000/api/users") // Remplacer par l'URL complète
       .then((res) => res.json())
       .then((data) => setUsers(data))
-      .catch((err) => console.error("Erreur lors du fetch des utilisateurs :", err));
+      .catch((err) =>
+        console.error("Erreur lors du fetch des utilisateurs :", err)
+      );
   };
-  
-  
 
   const handleDelete = async (id) => {
     if (window.confirm("Es-tu sûr de vouloir supprimer cet utilisateur ?")) {
       try {
         const res = await fetch(`http://localhost:5000/api/users/${id}`, {
-            method: "DELETE",
-          });
+          method: "DELETE",
+        });
+
         if (res.ok) {
-          // Mise à jour de la liste après suppression
-          fetchUsers();
+          fetchUsers(); // Mise à jour de la liste après suppression
         } else {
           alert("Erreur lors de la suppression");
         }
@@ -35,7 +35,7 @@ const UserList = () => {
   };
 
   const handleEdit = (id) => {
-    console.log('Redirection vers /admin/edit-user/' + id); // Vérifie l'ID et l'URL
+    console.log("Redirection vers /admin/edit-user/" + id);
     window.location.href = `/admin/edit-user/${id}`;
   };
 
