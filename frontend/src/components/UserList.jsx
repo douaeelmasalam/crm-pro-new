@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "./UserList.css"; // Import du style CSS pour personnaliser
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
@@ -40,41 +41,25 @@ const UserList = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Liste des utilisateurs</h2>
-      <table className="min-w-full border border-gray-300">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-2 border">Nom</th>
-            <th className="p-2 border">Email</th>
-            <th className="p-2 border">Rôle</th>
-            <th className="p-2 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user._id}>
-              <td className="p-2 border">{user.name}</td>
-              <td className="p-2 border">{user.email}</td>
-              <td className="p-2 border">{user.role}</td>
-              <td className="p-2 border space-x-2">
-                <button
-                  className="bg-yellow-400 text-white px-2 py-1 rounded"
-                  onClick={() => handleEdit(user._id)}
-                >
-                  Éditer
-                </button>
-                <button
-                  className="bg-red-500 text-white px-2 py-1 rounded"
-                  onClick={() => handleDelete(user._id)}
-                >
-                  Supprimer
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="user-list-container">
+      <h2 className="header">Liste des utilisateurs</h2>
+      <div className="user-grid">
+        {users.map((user) => (
+          <div className="user-card" key={user._id}>
+            <h3 className="user-name">{user.name}</h3>
+            <p className="user-email">Email: {user.email}</p>
+            <p className="user-role">Rôle: {user.role}</p>
+            <div className="actions">
+              <button className="edit-btn" onClick={() => handleEdit(user._id)}>
+                Éditer
+              </button>
+              <button className="delete-btn" onClick={() => handleDelete(user._id)}>
+                Supprimer
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,0 +1,148 @@
+/* Login.module.css - Version modulaire */
+
+.loginContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+.loginCard {
+  display: flex;
+  max-width: 900px;
+  width: 100%;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.loginLeft {
+  flex: 1;
+  padding: 40px;
+  background-color: #2c3e50;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.loginLeft h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.loginLeft p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.loginRight {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.loginRight h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.loginForm {
+  width: 100%;
+}
+
+.loginForm input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1em;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.loginForm input:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+.loginForm button {
+  width: 100%;
+  padding: 12px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.loginForm button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.forgotPassword {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.forgotPassword a {
+  color: #7f8c8d;
+  text-decoration: none;
+  font-size: 0.9em;
+  transition: color 0.3s;
+}
+
+.forgotPassword a:hover {
+  color: #3498db;
+}
+
+/* Messages d'état */
+.successMessage {
+  color: #2ecc71;
+  margin-top: 15px;
+  text-align: center;
+  padding: 10px;
+  background-color: rgba(46, 204, 113, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.errorMessage {
+  color: #e74c3c;
+  margin-top: 15px;
+  text-align: center;
+  padding: 10px;
+  background-color: rgba(231, 76, 60, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .loginCard {
+    flex-direction: column;
+  }
+  
+  .loginLeft, .loginRight {
+    padding: 30px;
+  }
+  
+  .loginLeft {
+    order: 2;
+    background-color: #3498db;
+  }
+}
