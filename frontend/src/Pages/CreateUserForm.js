@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 const CreateUserForm = () => {
-  // Déclaration des états pour chaque champ
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -9,7 +8,6 @@ const CreateUserForm = () => {
     role: 'user',
   });
 
-  // Fonction pour gérer les changements dans les champs
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -18,10 +16,12 @@ const CreateUserForm = () => {
     }));
   };
 
-  // Fonction pour gérer la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { name, email, password, role } = formData;
+
+    // ✅ Debug ici : affiche le mot de passe avant l'envoi
+    console.log('Mot de passe envoyé au backend (en clair) :', password);
 
     const userData = {
       name,
@@ -40,7 +40,6 @@ const CreateUserForm = () => {
       const result = await response.json();
       if (response.ok) {
         alert('Utilisateur créé avec succès');
-        // Réinitialisation du formulaire après soumission
         setFormData({
           name: '',
           email: '',
