@@ -1,10 +1,10 @@
-// Pages/AdminDashboard.jsx
 import React, { useState } from 'react';
 import '../styles/AdminDashboard.css';
+import CreateUserForm from '../components/CreateUserForm'; // ✅ Vérifie le bon chemin
+
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
 
-  // Dashboard statistics
   const stats = {
     users: 42,
     tickets: 156,
@@ -20,34 +20,22 @@ const AdminDashboard = () => {
           <div className="dashboard-content">
             <h2>Dashboard Overview</h2>
             <div className="stats-container">
-              <div className="stat-card">
-                <h3>Users</h3>
-                <p className="stat-value">{stats.users}</p>
-              </div>
-              <div className="stat-card">
-                <h3>Tickets</h3>
-                <p className="stat-value">{stats.tickets}</p>
-                <p className="stat-sub">{stats.openTickets} open</p>
-              </div>
-              <div className="stat-card">
-                <h3>Clients</h3>
-                <p className="stat-value">{stats.clients}</p>
-              </div>
-              <div className="stat-card">
-                <h3>Prospects</h3>
-                <p className="stat-value">{stats.prospects}</p>
-              </div>
-            </div>
-            <div className="recent-activity">
-              <h3>Recent Activity</h3>
-              <p>No recent activities to display.</p>
+              <div className="stat-card"><h3>Users</h3><p className="stat-value">{stats.users}</p></div>
+              <div className="stat-card"><h3>Tickets</h3><p className="stat-value">{stats.tickets}</p><p className="stat-sub">{stats.openTickets} open</p></div>
+              <div className="stat-card"><h3>Clients</h3><p className="stat-value">{stats.clients}</p></div>
+              <div className="stat-card"><h3>Prospects</h3><p className="stat-value">{stats.prospects}</p></div>
             </div>
           </div>
         );
       case 'users':
         return <div><h2>User Data</h2><p>User list will be implemented here.</p></div>;
-      case 'createUser':
-        return <div><h2>Create User</h2><p>User creation form will be implemented here.</p></div>;
+      case 'createUser': 
+        return (
+          <div>
+            <h2>Create User</h2>
+            <CreateUserForm /> {/* ✅ Formulaire intégré sans modifier les autres sections */}
+          </div>
+        );
       case 'tickets':
         return <div><h2>Tickets</h2><p>Ticket list will be implemented here.</p></div>;
       case 'createTicket':
@@ -72,55 +60,14 @@ const AdminDashboard = () => {
         </div>
         <nav className="sidebar-nav">
           <ul>
-            <li 
-              className={activeSection === 'dashboard' ? 'active' : ''}
-              onClick={() => setActiveSection('dashboard')}
-            >
-              Dashboard
-            </li>
-            <li 
-              className={activeSection === 'users' ? 'active' : ''}
-              onClick={() => setActiveSection('users')}
-            >
-              User Data
-            </li>
-            <li 
-              className={activeSection === 'createUser' ? 'active' : ''}
-              onClick={() => setActiveSection('createUser')}
-            >
-              Create User
-            </li>
-            <li 
-              className={activeSection === 'tickets' ? 'active' : ''}
-              onClick={() => setActiveSection('tickets')}
-            >
-              Tickets
-            </li>
-            <li 
-              className={activeSection === 'createTicket' ? 'active' : ''}
-              onClick={() => setActiveSection('createTicket')}
-            >
-              Create Ticket
-            </li>
-            <li className="sidebar-section">Affaires</li>
-            <li 
-              className={activeSection === 'clients' ? 'active' : ''}
-              onClick={() => setActiveSection('clients')}
-            >
-              Fiches Clients
-            </li>
-            <li 
-              className={activeSection === 'prospects' ? 'active' : ''}
-              onClick={() => setActiveSection('prospects')}
-            >
-              Prospects
-            </li>
-            <li 
-              className={activeSection === 'documents' ? 'active' : ''}
-              onClick={() => setActiveSection('documents')}
-            >
-              Documents
-            </li>
+            <li className={activeSection === 'dashboard' ? 'active' : ''} onClick={() => setActiveSection('dashboard')}>Dashboard</li>
+            <li className={activeSection === 'users' ? 'active' : ''} onClick={() => setActiveSection('users')}>User Data</li>
+            <li className={activeSection === 'createUser' ? 'active' : ''} onClick={() => setActiveSection('createUser')}>Create User</li>
+            <li className={activeSection === 'tickets' ? 'active' : ''} onClick={() => setActiveSection('tickets')}>Tickets</li>
+            <li className={activeSection === 'createTicket' ? 'active' : ''} onClick={() => setActiveSection('createTicket')}>Create Ticket</li>
+            <li className={activeSection === 'clients' ? 'active' : ''} onClick={() => setActiveSection('clients')}>Fiches Clients</li>
+            <li className={activeSection === 'prospects' ? 'active' : ''} onClick={() => setActiveSection('prospects')}>Prospects</li>
+            <li className={activeSection === 'documents' ? 'active' : ''} onClick={() => setActiveSection('documents')}>Documents</li>
           </ul>
         </nav>
       </div>
@@ -133,7 +80,7 @@ const AdminDashboard = () => {
           </div>
         </header>
         <main className="content-area">
-          {renderSection()}
+          {renderSection()} {/* ✅ Affichage dynamique sans toucher aux autres fonctionnalités */}
         </main>
       </div>
     </div>
