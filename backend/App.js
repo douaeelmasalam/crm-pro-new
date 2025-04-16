@@ -3,28 +3,35 @@ const cors = require('cors');
 const authRoutes = require('./Routes/authRoutes');
 const errorHandler = require('./Middleware/errorHandler');
 const userRoutes = require('./Routes/user');
+
 const app = express();
 
-app.use(cors());
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+// Configuration CORS
+app.use(cors({
+  origin: 'http://localhost:3000', // ou l'URL où est votre frontend
+  credentials: true
+}));
+
+// Middleware pour parser le JSON
 app.use(express.json());
-app.use(userRoutes);
+
+// Routes existantes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 
-
+// Route directe pour le login (compatibilité)
 const { login } = require('./Controllers/authController');
-app.post('/login', login); // Route directe pour la compatibilité
+app.post('/login', login);
 
-app.use(cors({
-    origin: 'http://localhost:3000',
-    credentials: true
-  }));
+// Nouvelle route pour le tableau de bord
+app.get('/api/dashboard', (req, res) => {
+  res.json({ 
+    status: 'success',
+    message: 'Bienvenue sur le tableau de bord agent'
+  });
+});
 
-// Use routes
-app.use('/api/auth', authRoutes);
-
-// Use error handler middleware
+// Middleware de gestion d'erreurs (doit être en dernier)
 app.use(errorHandler);
 
 module.exports = app;
