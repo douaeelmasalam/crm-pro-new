@@ -1,46 +1,55 @@
-import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from './Pages/Login';
-import AdminDashboard from './Pages/AdminDashboard';
-import AgentDashboard from './Pages/AgentDashboard';
-import EditUserForm from './components/EditUserForm'; // adapte le chemin si besoin
+import Login from "./Pages/Login";
+import AdminDashboard from "./Pages/AdminDashboard";
+import AgentDashboard from "./Pages/AgentDashboard";
+import EditUserForm from "./components/EditUserForm";
+import Tickets from "./Pages/Tickets";
+import Demandes from "./Pages/Demandes";
+import Taches from "./Pages/Taches";
+import Settings from "./Pages/Settings";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState('');
-  const [message, setMessage] = useState('');
+  const [userRole, setUserRole] = useState(""); // "admin" ou "agent"
+  const [message, setMessage] = useState("");
 
-  // Fonction qui retourne le bon tableau de bord
-  const renderDashboard = () => {
-    if (userRole === "admin") {
-      return <AdminDashboard />;
-    } else if (userRole === "user") {
-      return <AgentDashboard />;
-    } else {
-      return <div>Unknown role dashboard</div>;
-    }
+  // Gestion des accès sécurisés
+  const PrivateRoute = ({ element }) => {
+    return isLoggedIn ? element : <Navigate to="/" />;
   };
 
   return (
     <Router>
       <Routes>
-        {/* Page d’édition d’un utilisateur */}
-        <Route path="/admin/edit-user/:id" element={<EditUserForm />} />
+        {/* Redirection après connexion */}
+        <Route
+          path="/"
+          element={
+            isLoggedIn ? (
+              userRole === "admin" ? <Navigate to="/admin/dashboard" /> : <Navigate to="/agent/dashboard" />
+            ) : (
+              <Login
+                setIsLoggedIn={setIsLoggedIn}
+                setUserRole={setUserRole}
+                setMessage={setMessage}
+                message={message}
+              />
+            )
+          }
+        />
 
-        {/* Page principale : login ou dashboard selon le statut */}
-        <Route path="/" element={
-          isLoggedIn ? (
-            renderDashboard()
-          ) : (
-            <Login
-              setIsLoggedIn={setIsLoggedIn}
-              setUserRole={setUserRole}
-              setMessage={setMessage}
-              message={message}
-            />
-          )
-        } />
+        {/* Dashboard Admin */}
+        <Route path="/admin/dashboard" element={<PrivateRoute element={<AdminDashboard />} />} />
+        <Route path="/admin/edit-user/:id" element={<PrivateRoute element={<EditUserForm />} />} />
+
+        {/* Dashboard Agent */}
+        <Route path="/agent/dashboard" element={<PrivateRoute element={<AgentDashboard />} />} />
+        <Route path="/agent/tickets" element={<PrivateRoute element={<Tickets />} />} />
+        <Route path="/agent/demandes" element={<PrivateRoute element={<Demandes />} />} />
+        <Route path="/agent/taches" element={<PrivateRoute element={<Taches />} />} />
+        <Route path="/agent/settings" element={<PrivateRoute element={<Settings />} />} />
       </Routes>
     </Router>
   );
