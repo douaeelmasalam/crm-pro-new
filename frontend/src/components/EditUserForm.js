@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const EditUserForm = () => {
   const { id } = useParams();
-  const [userData, setUserData] = useState({ name: '', email: '', role: 'user' });
+  const navigate = useNavigate();
+
+  const [userData, setUserData] = useState({ name: '', email: '', role: 'user', password: '' });
 
   useEffect(() => {
     fetch(`http://localhost:5000/api/users/${id}`)
       .then((res) => res.json())
-      .then((data) => setUserData(data))
+      .then((data) => setUserData({ ...data, password: '' })) // ne jamais préremplir un mot de passe
       .catch((err) =>
         console.error("Erreur lors de la récupération de l'utilisateur :", err)
       );
@@ -38,6 +40,7 @@ const EditUserForm = () => {
 
       if (res.ok) {
         alert('Utilisateur mis à jour avec succès');
+        navigate('/admin/dashboard'); // Redirection vers le dashboard
       } else {
         alert(result.message || 'Erreur lors de la mise à jour');
       }
@@ -54,7 +57,7 @@ const EditUserForm = () => {
           type="text"
           name="name"
           value={userData.name}
-          onChange={handleChange}
+          onChange={handleChange} // Handle change ici
           required
         />
       </div>
@@ -64,16 +67,25 @@ const EditUserForm = () => {
           type="email"
           name="email"
           value={userData.email}
-          onChange={handleChange}
+          onChange={handleChange} // Handle change ici
           required
         />
       </div>
       <div>
         <label>Rôle :</label>
-        <select name="role" value={userData.role} onChange={handleChange}>
+        <select name="role" value={userData.role} onChange={handleChange}> {/* Handle change ici */}
           <option value="user">Utilisateur</option>
           <option value="admin">Admin</option>
         </select>
+      </div>
+      <div>
+        <label>Mot de passe :</label>
+        <input
+          type="password"
+          name="password"
+          value={userData.password}
+          onChange={handleChange} // Handle change ici
+        />
       </div>
       <button type="submit">Mettre à jour</button>
     </form>

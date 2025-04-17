@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import "./UserList.css"; // Import du style CSS pour personnaliser
+import "../styles/UserList.css"; // Import du style CSS
 
-const UserList = () => {
+const UserList = ({ onEditUser }) => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
@@ -9,7 +9,7 @@ const UserList = () => {
   }, []);
 
   const fetchUsers = () => {
-    fetch("http://localhost:5000/api/users") // Remplacer par l'URL complète
+    fetch("http://localhost:5000/api/users")
       .then((res) => res.json())
       .then((data) => setUsers(data))
       .catch((err) =>
@@ -25,7 +25,7 @@ const UserList = () => {
         });
 
         if (res.ok) {
-          fetchUsers(); // Mise à jour de la liste après suppression
+          fetchUsers(); // Rafraîchir la liste après suppression
         } else {
           alert("Erreur lors de la suppression");
         }
@@ -33,11 +33,6 @@ const UserList = () => {
         console.error("Erreur suppression :", error);
       }
     }
-  };
-
-  const handleEdit = (id) => {
-    console.log("Redirection vers /admin/edit-user/" + id);
-    window.location.href = `/admin/edit-user/${id}`;
   };
 
   return (
@@ -50,7 +45,7 @@ const UserList = () => {
             <p className="user-email">Email: {user.email}</p>
             <p className="user-role">Rôle: {user.role}</p>
             <div className="actions">
-              <button className="edit-btn" onClick={() => handleEdit(user._id)}>
+              <button className="edit-btn" onClick={() => onEditUser(user._id)}>
                 Éditer
               </button>
               <button className="delete-btn" onClick={() => handleDelete(user._id)}>

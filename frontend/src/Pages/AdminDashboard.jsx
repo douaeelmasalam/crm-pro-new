@@ -1,51 +1,118 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- import de useNavigate
 import '../styles/AdminDashboard.css';
-import CreateUserForm from '../components/CreateUserForm'; // ✅ Vérifie le bon chemin
+import '../styles/Userform.css';
+import CreateUserForm from '../components/CreateUserForm';
+import UserList from '../components/UserList'; // Cette ligne est nécessaire uniquement dans 'users'
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
+  const navigate = useNavigate(); // <-- pour naviguer vers la page d'édition
 
   const stats = {
     users: 42,
     tickets: 156,
     openTickets: 23,
     clients: 38,
-    prospects: 15
+    prospects: 15,
+  };
+
+  const handleEditUser = (id) => {
+    navigate(`/admin/edit-user/${id}`);
+  };
+
+  const handleUserUpdated = () => {
+    // Après la mise à jour, on redirige vers la page de création d'utilisateur.
+    setActiveSection('createUser');
+    navigate('/admin/create-user'); // Redirection vers "Create User"
   };
 
   const renderSection = () => {
-    switch(activeSection) {
+    switch (activeSection) {
       case 'dashboard':
         return (
           <div className="dashboard-content">
             <h2>Dashboard Overview</h2>
             <div className="stats-container">
-              <div className="stat-card"><h3>Users</h3><p className="stat-value">{stats.users}</p></div>
-              <div className="stat-card"><h3>Tickets</h3><p className="stat-value">{stats.tickets}</p><p className="stat-sub">{stats.openTickets} open</p></div>
-              <div className="stat-card"><h3>Clients</h3><p className="stat-value">{stats.clients}</p></div>
-              <div className="stat-card"><h3>Prospects</h3><p className="stat-value">{stats.prospects}</p></div>
+              <div className="stat-card">
+                <h3>Users</h3>
+                <p className="stat-value">{stats.users}</p>
+              </div>
+              <div className="stat-card">
+                <h3>Tickets</h3>
+                <p className="stat-value">{stats.tickets}</p>
+                <p className="stat-sub">{stats.openTickets} open</p>
+              </div>
+              <div className="stat-card">
+                <h3>Clients</h3>
+                <p className="stat-value">{stats.clients}</p>
+              </div>
+              <div className="stat-card">
+                <h3>Prospects</h3>
+                <p className="stat-value">{stats.prospects}</p>
+              </div>
             </div>
           </div>
         );
+
       case 'users':
-        return <div><h2>User Data</h2><p>User list will be implemented here.</p></div>;
-      case 'createUser': 
+        return (
+          <div>
+            <h2>User Data</h2>
+            {/* Affichage de la liste des utilisateurs */}
+            <UserList onEditUser={handleEditUser} />
+          </div>
+        );
+
+      case 'createUser':
         return (
           <div>
             <h2>Create User</h2>
-            <CreateUserForm /> {/* ✅ Formulaire intégré sans modifier les autres sections */}
+            {/* Affichage uniquement du formulaire */}
+            <CreateUserForm onUserUpdated={handleUserUpdated} />
           </div>
         );
+
       case 'tickets':
-        return <div><h2>Tickets</h2><p>Ticket list will be implemented here.</p></div>;
+        return (
+          <div>
+            <h2>Tickets</h2>
+            <p>Ticket list will be implemented here.</p>
+          </div>
+        );
+
       case 'createTicket':
-        return <div><h2>Create Ticket</h2><p>Ticket creation form will be implemented here.</p></div>;
+        return (
+          <div>
+            <h2>Create Ticket</h2>
+            <p>Ticket creation form will be implemented here.</p>
+          </div>
+        );
+
       case 'clients':
-        return <div><h2>Fiches Clients</h2><p>Client list will be implemented here.</p></div>;
+        return (
+          <div>
+            <h2>Fiches Clients</h2>
+            <p>Client list will be implemented here.</p>
+          </div>
+        );
+
       case 'prospects':
-        return <div><h2>Prospects</h2><p>Prospect list will be implemented here.</p></div>;
+        return (
+          <div>
+            <h2>Prospects</h2>
+            <p>Prospect list will be implemented here.</p>
+          </div>
+        );
+
       case 'documents':
-        return <div><h2>Documents</h2><p>Document management will be implemented here.</p></div>;
+        return (
+          <div>
+            <h2>Documents</h2>
+            <p>Document management will be implemented here.</p>
+          </div>
+        );
+
       default:
         return <div>Select a section</div>;
     }
@@ -60,17 +127,34 @@ const AdminDashboard = () => {
         </div>
         <nav className="sidebar-nav">
           <ul>
-            <li className={activeSection === 'dashboard' ? 'active' : ''} onClick={() => setActiveSection('dashboard')}>Dashboard</li>
-            <li className={activeSection === 'users' ? 'active' : ''} onClick={() => setActiveSection('users')}>User Data</li>
-            <li className={activeSection === 'createUser' ? 'active' : ''} onClick={() => setActiveSection('createUser')}>Create User</li>
-            <li className={activeSection === 'tickets' ? 'active' : ''} onClick={() => setActiveSection('tickets')}>Tickets</li>
-            <li className={activeSection === 'createTicket' ? 'active' : ''} onClick={() => setActiveSection('createTicket')}>Create Ticket</li>
-            <li className={activeSection === 'clients' ? 'active' : ''} onClick={() => setActiveSection('clients')}>Fiches Clients</li>
-            <li className={activeSection === 'prospects' ? 'active' : ''} onClick={() => setActiveSection('prospects')}>Prospects</li>
-            <li className={activeSection === 'documents' ? 'active' : ''} onClick={() => setActiveSection('documents')}>Documents</li>
+            <li className={activeSection === 'dashboard' ? 'active' : ''} onClick={() => setActiveSection('dashboard')}>
+              Dashboard
+            </li>
+            <li className={activeSection === 'users' ? 'active' : ''} onClick={() => setActiveSection('users')}>
+              User Data
+            </li>
+            <li className={activeSection === 'createUser' ? 'active' : ''} onClick={() => setActiveSection('createUser')}>
+              Create/Edit User
+            </li>
+            <li className={activeSection === 'tickets' ? 'active' : ''} onClick={() => setActiveSection('tickets')}>
+              Tickets
+            </li>
+            <li className={activeSection === 'createTicket' ? 'active' : ''} onClick={() => setActiveSection('createTicket')}>
+              Create Ticket
+            </li>
+            <li className={activeSection === 'clients' ? 'active' : ''} onClick={() => setActiveSection('clients')}>
+              Fiches Clients
+            </li>
+            <li className={activeSection === 'prospects' ? 'active' : ''} onClick={() => setActiveSection('prospects')}>
+              Prospects
+            </li>
+            <li className={activeSection === 'documents' ? 'active' : ''} onClick={() => setActiveSection('documents')}>
+              Documents
+            </li>
           </ul>
         </nav>
       </div>
+
       <div className="admin-content">
         <header className="admin-header">
           <h2>Admin Dashboard</h2>
@@ -79,9 +163,7 @@ const AdminDashboard = () => {
             <button className="logout-btn">Logout</button>
           </div>
         </header>
-        <main className="content-area">
-          {renderSection()} {/* ✅ Affichage dynamique sans toucher aux autres fonctionnalités */}
-        </main>
+        <main className="content-area">{renderSection()}</main>
       </div>
     </div>
   );

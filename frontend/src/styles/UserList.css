@@ -1,0 +1,99 @@
+.user-list-container {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+}
+
+.header {
+  font-size: 22px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Affichage en grille pour les cartes utilisateur */
+.user-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+/* Carte utilisateur */
+.user-card {
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease-in-out;
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Nom de l'utilisateur */
+.user-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+/* Informations utilisateur */
+.user-email, .user-role {
+  font-size: 14px;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+}
+
+/* Actions (Éditer & Supprimer) */
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.edit-btn, .delete-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s ease-in-out;
+}
+
+/* Bouton Éditer */
+.edit-btn {
+  background-color: #3498db;
+  color: rgb(6, 244, 204);
+}
+
+.edit-btn:hover {
+  background-color: #117f7b;
+}
+
+/* Bouton Supprimer */
+.delete-btn {
+  background-color: #1a86bd;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Responsivité */
+@media (max-width: 600px) {
+  .user-grid {
+      grid-template-columns: 1fr;
+  }
+
+  .actions {
+      flex-direction: column;
+      gap: 5px;
+  }
+}
