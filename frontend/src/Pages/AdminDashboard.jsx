@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // <-- import de useNavigate
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
 import '../styles/AdminDashboard.css';
 import '../styles/Userform.css';
 import CreateUserForm from '../components/CreateUserForm';
-import UserList from '../components/UserList'; // Cette ligne est nécessaire uniquement dans 'users'
+import UserList from '../components/UserList';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
-  const navigate = useNavigate(); // <-- pour naviguer vers la page d'édition
+  const navigate = useNavigate();
+  const location = useLocation(); // Get location object
+
+  // Check for state passed during navigation
+  useEffect(() => {
+    if (location.state && location.state.activeSection) {
+      setActiveSection(location.state.activeSection);
+    }
+  }, [location]);
 
   const stats = {
     users: 42,
@@ -22,9 +30,9 @@ const AdminDashboard = () => {
   };
 
   const handleUserUpdated = () => {
-    // Après la mise à jour, on redirige vers la page de création d'utilisateur.
-    setActiveSection('createUser');
-    navigate('/admin/create-user'); // Redirection vers "Create User"
+    // Redirect to user list after update
+    setActiveSection('users');
+    navigate('/admin/dashboard', { state: { activeSection: 'users' } });
   };
 
   const renderSection = () => {

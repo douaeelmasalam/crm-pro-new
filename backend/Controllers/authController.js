@@ -1,24 +1,23 @@
+const bcrypt = require('bcrypt');
 const User = require('../Models/User.js');
 
 const login = async (req, res) => {
   const { email, password } = req.body;
-  
+
   try {
-    // Find the user by email
+    // Rechercher l'utilisateur par email
     const user = await User.findOne({ email });
-    
     if (!user) {
       return res.status(401).send('Invalid credentials');
     }
-    
-    // Compare the provided password with the stored password
-    if (password === user.password) {
-      // Send back user role along with success message
-      res.status(200).json({
-        message: 'Login successful!',
-        role: user.role  // Include the user's role
-      });
+
+    // Comparer le mot de passe en clair avec le mot de passe haché
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (isMatch) {
+      // Connexion réussie
+      res.status(200).json({ message: 'Login successful!', role: user.role });
     } else {
+      // Mot de passe incorrect
       res.status(401).send('Invalid credentials');
     }
   } catch (error) {
@@ -27,6 +26,4 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = {
-  login
-};
+module.exports = { login };
