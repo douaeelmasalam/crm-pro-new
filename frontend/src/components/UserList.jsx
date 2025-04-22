@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../styles/UserList.css"; // Import du style CSS
+import "../styles/UserList.css";
 
 const UserList = ({ onEditUser }) => {
   const [users, setUsers] = useState([]);
@@ -37,23 +37,40 @@ const UserList = ({ onEditUser }) => {
 
   return (
     <div className="user-list-container">
-      <h2 className="header">Liste des utilisateurs</h2>
-      <div className="user-grid">
-        {users.map((user) => (
-          <div className="user-card" key={user._id}>
-            <h3 className="user-name">{user.name}</h3>
-            <p className="user-email">Email: {user.email}</p>
-            <p className="user-role">Rôle: {user.role}</p>
-            <div className="actions">
-              <button className="edit-btn" onClick={() => onEditUser(user._id)}>
-                Éditer
-              </button>
-              <button className="delete-btn" onClick={() => handleDelete(user._id)}>
-                Supprimer
-              </button>
-            </div>
-          </div>
-        ))}
+      <h2 className="header">Users</h2>
+      <div className="table-container">
+        <table className="users-table">
+          <thead>
+            <tr>
+              <th>NAME</th>
+              <th>EMAIL</th>
+              <th>ROLE</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user._id}>
+                <td>
+                  <div className="user-name-cell">
+                    <div className="user-avatar"></div>
+                    <div>{user.name}</div>
+                  </div>
+                </td>
+                <td>{user.email}</td>
+                <td>{user.role}</td>
+                <td className="actions-cell">
+                  <button className="edit-btn" onClick={() => onEditUser(user._id)}>
+                    Edit
+                  </button>
+                  <button className="delete-btn" onClick={() => handleDelete(user._id)}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [stats, setStats] = useState({
     users: 42,
-    tickets: 156,
+    tickets: 15,
     openTickets: 23,
     clients: 38,
     prospects: 0 // Sera mis à jour depuis l'API

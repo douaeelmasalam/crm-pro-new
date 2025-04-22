@@ -16,6 +16,12 @@
   margin-bottom: 24px;
 }
 
+.prospect-header h2 {
+  color: #1f2937;
+  font-size: 24px;
+  margin: 0;
+}
+
 .add-prospect-btn {
   background-color: #0983a8;
   color: white;
@@ -25,11 +31,12 @@
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .add-prospect-btn:hover {
   background-color: #18ade3;
+  transform: translateY(-1px);
 }
 
 /* 📝 Formulaire */
@@ -38,6 +45,7 @@
   border-radius: 10px;
   padding: 24px;
   background-color: #f9fafb;
+  margin-bottom: 24px;
 }
 
 .prospect-form h3 {
@@ -66,13 +74,14 @@
   border-radius: 6px;
   font-size: 14px;
   background-color: white;
-  transition: border-color 0.3s;
+  transition: all 0.3s;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
   border-color: #009bad;
+  box-shadow: 0 0 0 3px rgba(0, 155, 173, 0.1);
 }
 
 /* 🎛️ Boutons */
@@ -90,7 +99,7 @@
   font-weight: 600;
   font-size: 14px;
   border: none;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
 }
 
 .submit-btn {
@@ -100,6 +109,7 @@
 
 .submit-btn:hover {
   background-color: #059669;
+  transform: translateY(-1px);
 }
 
 .cancel-btn {
@@ -110,17 +120,20 @@
 
 .cancel-btn:hover {
   background-color: #e5e7eb;
+  transform: translateY(-1px);
 }
 
 /* 📊 Tableau des prospects */
 .prospect-table-container {
   overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background-color: white;
 }
 
 .prospect-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 16px;
   font-size: 14px;
 }
 
@@ -135,13 +148,15 @@
   background-color: #f1f5f9;
   color: #111827;
   font-weight: 600;
+  position: sticky;
+  top: 0;
 }
 
 .prospect-table tr:hover {
   background-color: #f9fafb;
 }
 
-/* 🛠️ Boutons d’action */
+/* 🛠️ Boutons d'action */
 .edit-btn,
 .delete-btn {
   padding: 6px 14px;
@@ -150,7 +165,8 @@
   font-weight: 500;
   cursor: pointer;
   border: none;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  margin-right: 8px;
 }
 
 .edit-btn {
@@ -160,24 +176,17 @@
 
 .edit-btn:hover {
   background-color: #eab308;
+  transform: translateY(-1px);
 }
 
 .delete-btn {
-  background-color: #ef4444;
+  background-color: #01c8cb;
   color: white;
 }
 
 .delete-btn:hover {
-  background-color: #dc2626;
-}
-
-/* 📅 Date de rappel */
-.reminder-date {
-  background-color: #e0f2fe;
-  color: #0284c7;
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 6px;
+  background-color: #0e6b82;
+  transform: translateY(-1px);
 }
 
 /* 📌 Statuts */
@@ -225,7 +234,7 @@
   color: #b91c1c;
 }
 
-/* 📭 Éléments d’état */
+/* 📭 Éléments d'état */
 .no-prospects,
 .loading {
   text-align: center;
@@ -248,4 +257,19 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
+  accent-color: #0983a8;
+}
+
+/* Animation pour les boutons */
+@keyframes buttonPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.submit-btn:active,
+.cancel-btn:active,
+.edit-btn:active,
+.delete-btn:active {
+  animation: buttonPulse 0.3s ease;
 }

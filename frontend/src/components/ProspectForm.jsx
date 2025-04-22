@@ -15,8 +15,7 @@ const ProspectForm = ({ onProspectUpdated }) => {
     telephone: '',
     origine: 'Cold Call',
     gestionnaire: '',
-    statut: 'Nouveau',
-    rappel: ''
+    statut: 'Nouveau'
   });
 
   const [editingId, setEditingId] = useState(null);
@@ -70,8 +69,7 @@ const ProspectForm = ({ onProspectUpdated }) => {
         telephone: '',
         origine: 'Cold Call',
         gestionnaire: '',
-        statut: 'Nouveau',
-        rappel: ''
+        statut: 'Nouveau'
       });
       
       setEditingId(null);
@@ -99,8 +97,7 @@ const ProspectForm = ({ onProspectUpdated }) => {
       telephone: prospect.telephone,
       origine: prospect.origine,
       gestionnaire: prospect.gestionnaire,
-      statut: prospect.statut,
-      rappel: prospect.rappel ? prospect.rappel.substring(0, 10) : '' // Format YYYY-MM-DD pour l'input date
+      statut: prospect.statut
     });
     setEditingId(prospect._id); // Notez que MongoDB utilise _id
     setShowForm(true);
@@ -128,12 +125,6 @@ const ProspectForm = ({ onProspectUpdated }) => {
         setLoading(false);
       }
     }
-  };
-
-  const formatDate = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
   return (
@@ -199,22 +190,25 @@ const ProspectForm = ({ onProspectUpdated }) => {
             </div>
             
             <div className="form-group">
-              <label htmlFor="origine">Origine</label>
-              <select
-                id="origine"
-                name="origine"
-                value={formData.origine}
-                onChange={handleChange}
-              >
-                <option value="Cold Call">Cold Call</option>
-                <option value="Advertisement">Publicité</option>
-                <option value="Web Download">Téléchargement Web</option>
-                <option value="Seminar Partner">Partenaire Séminaire</option>
-                <option value="Online Store">Boutique en Ligne</option>
-                <option value="Partner">Partenaire</option>
-                <option value="External Referral">Référence Externe</option>
-              </select>
-            </div>
+  <label htmlFor="origine">Origine</label>
+  <select
+    id="origine"
+    name="origine"
+    value={formData.origine}
+    onChange={handleChange}
+  >
+    <option value="">-- Sélectionner une origine --</option>
+    <option value="Site web Miacorp">Site web Miacorp</option>
+    <option value="Campagne e-mailing">Campagne e-mailing</option>
+    <option value="Réseaux sociaux">Réseaux sociaux</option>
+    <option value="Salon professionnel">Salon professionnel</option>
+    <option value="Prospection directe">Prospection directe</option>
+    <option value="Publicité en ligne">Publicité en ligne</option>
+    <option value="Client existant">Client existant</option>
+    <option value="Autre">Autre</option>
+  </select>
+</div>
+
             
             <div className="form-group">
               <label htmlFor="gestionnaire">Gestionnaire</label>
@@ -225,10 +219,7 @@ const ProspectForm = ({ onProspectUpdated }) => {
                 onChange={handleChange}
               >
                 <option value="">Sélectionnez un gestionnaire</option>
-                <option value="Jean Dupont">Jean Dupont</option>
-                <option value="Marie Martin">Marie Martin</option>
-                <option value="Lucas Bernard">Lucas Bernard</option>
-                <option value="Sophie Petit">Sophie Petit</option>
+                <option value="adm douae">adm douae</option>
               </select>
             </div>
             
@@ -250,17 +241,6 @@ const ProspectForm = ({ onProspectUpdated }) => {
               </select>
             </div>
             
-            <div className="form-group">
-              <label htmlFor="rappel">Date de Rappel</label>
-              <input
-                type="date"
-                id="rappel"
-                name="rappel"
-                value={formData.rappel}
-                onChange={handleChange}
-              />
-            </div>
-            
             <div className="form-buttons">
               <button type="submit" className="submit-btn" disabled={loading}>
                 {loading ? 'Chargement...' : (editingId ? 'Mettre à jour' : 'Enregistrer')}
@@ -278,8 +258,7 @@ const ProspectForm = ({ onProspectUpdated }) => {
                     telephone: '',
                     origine: 'Cold Call',
                     gestionnaire: '',
-                    statut: 'Nouveau',
-                    rappel: ''
+                    statut: 'Nouveau'
                   });
                 }}
                 disabled={loading}
@@ -321,14 +300,7 @@ const ProspectForm = ({ onProspectUpdated }) => {
                   <td>
                     <input type="checkbox" />
                   </td>
-                  <td>
-                    {prospect.rappel && (
-                      <span className="reminder-date">
-                        {formatDate(prospect.rappel)}
-                      </span>
-                    )}
-                    {prospect.nom}
-                  </td>
+                  <td>{prospect.nom}</td>
                   <td>{prospect.societe}</td>
                   <td>{prospect.email}</td>
                   <td>{prospect.telephone}</td>
