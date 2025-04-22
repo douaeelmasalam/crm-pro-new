@@ -3,6 +3,7 @@ const cors = require('cors');
 const authRoutes = require('./Routes/authRoutes');
 const errorHandler = require('./Middleware/errorHandler');
 const userRoutes = require('./Routes/user');
+const prospectRoutes = require('./Routes/prospectRoutes'); // Add this import
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 // Routes existantes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/prospects', prospectRoutes); // Add this line
 
 // Route directe pour le login (compatibilité)
 const { login } = require('./Controllers/authController');

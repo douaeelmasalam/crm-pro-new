@@ -1,0 +1,251 @@
+/* 🌐 Container principal */
+.prospect-container {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 32px;
+  margin-bottom: 24px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 🔖 En-tête du formulaire */
+.prospect-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.add-prospect-btn {
+  background-color: #0983a8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 24px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.add-prospect-btn:hover {
+  background-color: #18ade3;
+}
+
+/* 📝 Formulaire */
+.prospect-form-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 24px;
+  background-color: #f9fafb;
+}
+
+.prospect-form h3 {
+  margin: 0 0 24px;
+  color: #1f2937;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #009bad;
+}
+
+/* 🎛️ Boutons */
+.form-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.submit-btn,
+.cancel-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  transition: background-color 0.3s;
+}
+
+.submit-btn {
+  background-color: #10b981;
+  color: white;
+}
+
+.submit-btn:hover {
+  background-color: #059669;
+}
+
+.cancel-btn {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.cancel-btn:hover {
+  background-color: #e5e7eb;
+}
+
+/* 📊 Tableau des prospects */
+.prospect-table-container {
+  overflow-x: auto;
+}
+
+.prospect-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.prospect-table th,
+.prospect-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.prospect-table th {
+  background-color: #f1f5f9;
+  color: #111827;
+  font-weight: 600;
+}
+
+.prospect-table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* 🛠️ Boutons d’action */
+.edit-btn,
+.delete-btn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.edit-btn {
+  background-color: #facc15;
+  color: #1f2937;
+}
+
+.edit-btn:hover {
+  background-color: #eab308;
+}
+
+.delete-btn {
+  background-color: #ef4444;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+}
+
+/* 📅 Date de rappel */
+.reminder-date {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+/* 📌 Statuts */
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-nouveau {
+  background-color: #dbeafe;
+  color: #057b9b;
+}
+
+.status-en-cours {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-qualifié {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.status-proposition {
+  background-color: #ede9fe;
+  color: #7c3aed;
+}
+
+.status-négociation {
+  background-color: #ffe4e6;
+  color: #be123c;
+}
+
+.status-gagné {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-perdu {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* 📭 Éléments d’état */
+.no-prospects,
+.loading {
+  text-align: center;
+  padding: 40px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+/* ☑️ Checkboxes */
+.prospect-table input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}

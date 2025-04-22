@@ -1,28 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // Added useLocation
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/AdminDashboard.css';
 import '../styles/Userform.css';
 import CreateUserForm from '../components/CreateUserForm';
 import UserList from '../components/UserList';
+import ProspectForm from '../components/ProspectForm';
+
+const API_URL = 'http://localhost:5000/api';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [stats, setStats] = useState({
+    users: 42,
+    tickets: 156,
+    openTickets: 23,
+    clients: 38,
+    prospects: 0 // Sera mis à jour depuis l'API
+  });
+  const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
-  const location = useLocation(); // Get location object
+  const location = useLocation();
 
-  // Check for state passed during navigation
+  // Check for state passed during navigation and fetch stats at component mount
   useEffect(() => {
+    fetchStats();
+    
     if (location.state && location.state.activeSection) {
       setActiveSection(location.state.activeSection);
     }
   }, [location]);
 
-  const stats = {
-    users: 42,
-    tickets: 156,
-    openTickets: 23,
-    clients: 38,
-    prospects: 15,
+  // Fonction pour récupérer les statistiques
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      // Récupérer le nombre de prospects depuis l'API
+      const prospectsRes = await axios.get(`${API_URL}/prospects`);
+      
+      // Mettre à jour les statistiques avec le nombre réel de prospects
+      setStats(prevStats => ({
+        ...prevStats,
+        prospects: prospectsRes.data.length
+      }));
+      
+    } catch (err) {
+      console.error('Erreur lors du chargement des statistiques:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditUser = (id) => {
@@ -35,31 +62,41 @@ const AdminDashboard = () => {
     navigate('/admin/dashboard', { state: { activeSection: 'users' } });
   };
 
+  const handleProspectUpdated = () => {
+    // Rafraîchir les statistiques et la vue des prospects
+    fetchStats();
+    setActiveSection('prospects');
+  };
+
   const renderSection = () => {
     switch (activeSection) {
       case 'dashboard':
         return (
           <div className="dashboard-content">
             <h2>Dashboard Overview</h2>
-            <div className="stats-container">
-              <div className="stat-card">
-                <h3>Users</h3>
-                <p className="stat-value">{stats.users}</p>
+            {loading ? (
+              <div className="loading">Chargement des statistiques...</div>
+            ) : (
+              <div className="stats-container">
+                <div className="stat-card">
+                  <h3>Users</h3>
+                  <p className="stat-value">{stats.users}</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Tickets</h3>
+                  <p className="stat-value">{stats.tickets}</p>
+                  <p className="stat-sub">{stats.openTickets} open</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Clients</h3>
+                  <p className="stat-value">{stats.clients}</p>
+                </div>
+                <div className="stat-card">
+                  <h3>Prospects</h3>
+                  <p className="stat-value">{stats.prospects}</p>
+                </div>
               </div>
-              <div className="stat-card">
-                <h3>Tickets</h3>
-                <p className="stat-value">{stats.tickets}</p>
-                <p className="stat-sub">{stats.openTickets} open</p>
-              </div>
-              <div className="stat-card">
-                <h3>Clients</h3>
-                <p className="stat-value">{stats.clients}</p>
-              </div>
-              <div className="stat-card">
-                <h3>Prospects</h3>
-                <p className="stat-value">{stats.prospects}</p>
-              </div>
-            </div>
+            )}
           </div>
         );
 
@@ -108,8 +145,9 @@ const AdminDashboard = () => {
       case 'prospects':
         return (
           <div>
-            <h2>Prospects</h2>
-            <p>Prospect list will be implemented here.</p>
+            <h2>Gestion des Prospects</h2>
+            {/* Intégration du composant ProspectForm avec la fonction de callback */}
+            <ProspectForm onProspectUpdated={handleProspectUpdated} />
           </div>
         );
 
@@ -153,7 +191,14 @@ const AdminDashboard = () => {
             <li className={activeSection === 'clients' ? 'active' : ''} onClick={() => setActiveSection('clients')}>
               Fiches Clients
             </li>
-            <li className={activeSection === 'prospects' ? 'active' : ''} onClick={() => setActiveSection('prospects')}>
+            <li 
+              className={activeSection === 'prospects' ? 'active' : ''} 
+              onClick={() => {
+                setActiveSection('prospects');
+                // Rafraîchir les statistiques lorsqu'on navigue vers la section prospects
+                fetchStats();
+              }}
+            >
               Prospects
             </li>
             <li className={activeSection === 'documents' ? 'active' : ''} onClick={() => setActiveSection('documents')}>
