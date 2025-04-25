@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import '../styles/AgentDashboard.css';
 
+
 const AgentDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(true);

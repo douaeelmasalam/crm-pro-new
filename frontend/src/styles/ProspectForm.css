@@ -180,12 +180,12 @@
 }
 
 .delete-btn {
-  background-color: #01c8cb;
+  background-color: #11c3c3;
   color: white;
 }
 
 .delete-btn:hover {
-  background-color: #0e6b82;
+  background-color: #21aed2;
   transform: translateY(-1px);
 }
 

@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Login from "./Pages/Login";
 import AdminDashboard from "./Pages/AdminDashboard";
 import AgentDashboard from "./Pages/AgentDashboard";
-import EditUserForm from "./components/EditUserForm"; // <-- ✅ Import du composant d’édition
+import EditUserForm from "./components/EditUserForm";
 import Tickets from "./Pages/Tickets";
 import Demandes from "./Pages/Demandes";
 import Taches from "./Pages/Taches";
@@ -18,9 +18,9 @@ function App() {
   useEffect(() => {
     if (isLoggedIn && userRole === "agent") {
       fetch("http://localhost:3000/api/dashboard")
-        .then(response => response.json())
-        .then(data => setMessage(data.message))
-        .catch(error => console.error("Erreur lors de la récupération du message:", error));
+        .then((response) => response.json())
+        .then((data) => setMessage(data.message))
+        .catch((error) => console.error("Erreur lors de la récupération du message:", error));
     }
   }, [isLoggedIn, userRole]);
 
@@ -53,10 +53,7 @@ function App() {
         <Route path="/admin/edit-user/:id" element={<PrivateRoute element={<EditUserForm />} />} />
 
         {/* 🧑‍💼 Pages Agent */}
-        <Route path="/agent/dashboard">
-          <Route index element={<AgentDashboard />} />
-          <Route path="*" element={<AgentDashboard />} />
-        </Route>
+        <Route path="/agent/dashboard" element={<PrivateRoute element={<AgentDashboard />} />} />
         <Route path="/agent/tickets" element={<PrivateRoute element={<Tickets />} />} />
         <Route path="/agent/demandes" element={<PrivateRoute element={<Demandes />} />} />
         <Route path="/agent/taches" element={<PrivateRoute element={<Taches />} />} />

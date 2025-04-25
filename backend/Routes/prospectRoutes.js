@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const router = express.Router();
-const Prospect = require('../models/Prospect');
+const Prospect = require('../Models/Prospect');
 
 // ✅ GET : récupérer tous les prospects
 router.get('/', async (req, res) => {

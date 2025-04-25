@@ -15,8 +15,8 @@ const AdminDashboard = () => {
     users: 42,
     tickets: 15,
     openTickets: 23,
-    clients: 38,
-    prospects: 0 // Sera mis à jour depuis l'API
+    clients: 0, // Will be updated from API
+    prospects: 0 // Will be updated from API
   });
   const [loading, setLoading] = useState(false);
   
@@ -32,17 +32,21 @@ const AdminDashboard = () => {
     }
   }, [location]);
 
-  // Fonction pour récupérer les statistiques
+  // Function to fetch statistics
   const fetchStats = async () => {
     setLoading(true);
     try {
-      // Récupérer le nombre de prospects depuis l'API
+      // Get prospects count from API
       const prospectsRes = await axios.get(`${API_URL}/prospects`);
       
-      // Mettre à jour les statistiques avec le nombre réel de prospects
+      // Get clients count from API
+      const clientsRes = await axios.get(`${API_URL}/clients`);
+      
+      // Update statistics with real data
       setStats(prevStats => ({
         ...prevStats,
-        prospects: prospectsRes.data.length
+        prospects: prospectsRes.data.length,
+        clients: clientsRes.data.length
       }));
       
     } catch (err) {
@@ -62,8 +66,9 @@ const AdminDashboard = () => {
     navigate('/admin/dashboard', { state: { activeSection: 'users' } });
   };
 
+
   const handleProspectUpdated = () => {
-    // Rafraîchir les statistiques et la vue des prospects
+    // Refresh statistics and prospects view
     fetchStats();
     setActiveSection('prospects');
   };
@@ -104,7 +109,6 @@ const AdminDashboard = () => {
         return (
           <div>
             <h2>User Data</h2>
-            {/* Affichage de la liste des utilisateurs */}
             <UserList onEditUser={handleEditUser} />
           </div>
         );
@@ -113,7 +117,6 @@ const AdminDashboard = () => {
         return (
           <div>
             <h2>Create User</h2>
-            {/* Affichage uniquement du formulaire */}
             <CreateUserForm onUserUpdated={handleUserUpdated} />
           </div>
         );
@@ -134,19 +137,11 @@ const AdminDashboard = () => {
           </div>
         );
 
-      case 'clients':
-        return (
-          <div>
-            <h2>Fiches Clients</h2>
-            <p>Client list will be implemented here.</p>
-          </div>
-        );
 
       case 'prospects':
         return (
           <div>
             <h2>Gestion des Prospects</h2>
-            {/* Intégration du composant ProspectForm avec la fonction de callback */}
             <ProspectForm onProspectUpdated={handleProspectUpdated} />
           </div>
         );
@@ -188,14 +183,16 @@ const AdminDashboard = () => {
             <li className={activeSection === 'createTicket' ? 'active' : ''} onClick={() => setActiveSection('createTicket')}>
               Create Ticket
             </li>
-            <li className={activeSection === 'clients' ? 'active' : ''} onClick={() => setActiveSection('clients')}>
+            <li className={activeSection === 'clients' ? 'active' : ''} onClick={() => {
+              setActiveSection('clients');
+              fetchStats();
+            }}>
               Fiches Clients
             </li>
             <li 
               className={activeSection === 'prospects' ? 'active' : ''} 
               onClick={() => {
                 setActiveSection('prospects');
-                // Rafraîchir les statistiques lorsqu'on navigue vers la section prospects
                 fetchStats();
               }}
             >

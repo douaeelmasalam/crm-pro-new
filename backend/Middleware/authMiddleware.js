@@ -1,17 +1,16 @@
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = 'votre_clé_secrète';
 
 const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Format: Bearer TOKEN
+  const token = req.header('Authorization');
+  if (!token) return res.status(401).json({ message: 'Accès refusé, aucun token' });
 
-  if (!token) return res.sendStatus(401); // non autorisé
-
-  jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) return res.sendStatus(403); // token invalide
-    req.user = user; // Injecter user (ex: { id, role })
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET); // Assure-toi d’avoir cette variable dans .env
+    req.user = verified;
     next();
-  });
+  } catch (error) {
+    res.status(400).json({ message: 'Token invalide' });
+  }
 };
 
 module.exports = authenticateToken;

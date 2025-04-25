@@ -1,14 +1,15 @@
-require('dotenv').config();
-const app = require('./App');
-const connectDB = require('./config/db');
+// index.js
+require('dotenv').config(); // Charge les variables d'environnement depuis .env
+const app = require('./App'); // Import de l'application Express
+const connectDB = require('./config/db'); // Connexion MongoDB
 
-// Connect to MongoDB
+// Connexion à la base de données
 connectDB();
 
-// Define port
+// Définition du port
 const PORT = process.env.PORT || 5000;
 
-// Start the server
+// Lancement du serveur
 app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
+  console.log(`✅ Backend running on http://localhost:${PORT}`);
 });
