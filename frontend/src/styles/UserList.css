@@ -55,7 +55,7 @@
 .edit-btn {
   padding: 6px 12px;
   background-color: #2196f3;
-  color: rgb(146, 144, 144);
+  color: rgb(181, 119, 119);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -63,7 +63,7 @@
 
 .delete-btn {
   padding: 6px 12px;
-  background-color: #029dc7;
+  background-color: #035c75;
   color: white;
   border: none;
   border-radius: 4px;

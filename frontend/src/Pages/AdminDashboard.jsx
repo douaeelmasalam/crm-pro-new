@@ -6,7 +6,8 @@ import '../styles/Userform.css';
 import CreateUserForm from '../components/CreateUserForm';
 import UserList from '../components/UserList';
 import ProspectForm from '../components/ProspectForm';
-
+import ClientForm from '../components/ClientForm';
+import ClientsList from '../components/ClientsList'; // Import your ClientsList component
 const API_URL = 'http://localhost:5000/api';
 
 const AdminDashboard = () => {
@@ -66,11 +67,16 @@ const AdminDashboard = () => {
     navigate('/admin/dashboard', { state: { activeSection: 'users' } });
   };
 
-
   const handleProspectUpdated = () => {
     // Refresh statistics and prospects view
     fetchStats();
     setActiveSection('prospects');
+  };
+
+  const handleClientUpdated = () => {
+    // Refresh statistics and clients view
+    fetchStats();
+    setActiveSection('clients');
   };
 
   const renderSection = () => {
@@ -137,6 +143,21 @@ const AdminDashboard = () => {
           </div>
         );
 
+      case 'clients':
+        return (
+          <div>
+            <h2>Fiches Clients</h2>
+            <ClientsList /> {/* Use your ClientsList component here */}
+          </div>
+        );
+
+      case 'createClient':
+        return (
+          <div>
+            <h2>Créer/Modifier Client</h2>
+            <ClientForm onClientUpdated={handleClientUpdated} />
+          </div>
+        );
 
       case 'prospects':
         return (
@@ -188,6 +209,9 @@ const AdminDashboard = () => {
               fetchStats();
             }}>
               Fiches Clients
+            </li>
+            <li className={activeSection === 'createClient' ? 'active' : ''} onClick={() => setActiveSection('createClient')}>
+              Créer Client
             </li>
             <li 
               className={activeSection === 'prospects' ? 'active' : ''} 
