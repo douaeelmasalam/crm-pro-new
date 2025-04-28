@@ -146,7 +146,6 @@ const AdminDashboard = () => {
       case 'clients':
         return (
           <div>
-            <h2>Fiches Clients</h2>
             <ClientsList /> {/* Use your ClientsList component here */}
           </div>
         );
@@ -154,7 +153,6 @@ const AdminDashboard = () => {
       case 'createClient':
         return (
           <div>
-            <h2>Créer/Modifier Client</h2>
             <ClientForm onClientUpdated={handleClientUpdated} />
           </div>
         );

@@ -16,7 +16,6 @@ const ClientForm = () => {
     project: '',
     tracker: 'Fiche client',
     subject: 'FICHE CLIENT 2025',
-    description: 'Modifier',
     status: '',
     priority: '',
     assignedTo: '',
@@ -132,34 +131,63 @@ const ClientForm = () => {
       <form onSubmit={handleSubmit}>
         <div className="form-grid">
           <div className="left-column">
-            {/* Project Information */}
+            {/* Informations Générales */}
             <div className="form-section">
-              <h3>Projet</h3>
-              <div className="form-group">
-                <label htmlFor="project">Projet</label>
-                <input
-                  type="text"
-                  id="project"
-                  name="project"
-                  value={formData.project}
-                  onChange={handleChange}
-                />
+              <h3>Informations Générales</h3>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="project">Project*</label>
+                  <input
+                    type="text"
+                    id="project"
+                    name="project"
+                    value={formData.project}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="parentTask">Tâche parente</label>
+                  <input
+                    type="text"
+                    id="parentTask"
+                    name="parentTask"
+                    value={formData.parentTask}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="tracker">Tracker</label>
-                <input
-                  type="text"
-                  id="tracker"
-                  name="tracker"
-                  value={formData.tracker}
-                  onChange={handleChange}
-                  readOnly
-                />
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="tracker">Tracker*</label>
+                  <input
+                    type="text"
+                    id="tracker"
+                    name="tracker"
+                    value={formData.tracker}
+                    onChange={handleChange}
+                    readOnly
+                    required
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="startDate">Début</label>
+                  <DatePicker
+                    id="startDate"
+                    selected={formData.startDate}
+                    onChange={(date) => handleDateChange(date, 'startDate')}
+                    dateFormat="dd/MM/yyyy"
+                    className="datepicker-input"
+                  />
+                </div>
               </div>
-
+              
               <div className="form-group">
-                <label htmlFor="subject">Sujet</label>
+                <label htmlFor="subject">Sujet*</label>
                 <input
                   type="text"
                   id="subject"
@@ -167,62 +195,95 @@ const ClientForm = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   readOnly
+                  required
                 />
               </div>
-
-              <div className="form-group">
-                <label htmlFor="description">Description</label>
-                <input
-                  type="text"
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                />
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="status">Statut*</label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Sélectionner</option>
+                    <option value="Nouveau">Nouveau</option>
+                    <option value="En cours">En cours</option>
+                    <option value="Clôturé">Clôturé</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="dueDate">Échéance</label>
+                  <DatePicker
+                    id="dueDate"
+                    selected={formData.dueDate}
+                    onChange={(date) => handleDateChange(date, 'dueDate')}
+                    dateFormat="dd/MM/yyyy"
+                    className="datepicker-input"
+                  />
+                </div>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="status">Statut</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                >
-                  <option value="">Sélectionner</option>
-                  <option value="Nouveau">Nouveau</option>
-                  <option value="En cours">En cours</option>
-                  <option value="Clôturé">Clôturé</option>
-                </select>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="priority">Priorité*</label>
+                  <select
+                    id="priority"
+                    name="priority"
+                    value={formData.priority}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Sélectionner</option>
+                    <option value="Basse">Basse</option>
+                    <option value="Normale">Normale</option>
+                    <option value="Haute">Haute</option>
+                    <option value="Urgente">Urgente</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="estimatedTime">Temps estimé (heures)</label>
+                  <input
+                    type="number"
+                    id="estimatedTime"
+                    name="estimatedTime"
+                    value={formData.estimatedTime}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="priority">Priorité</label>
-                <select
-                  id="priority"
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                >
-                  <option value="">Sélectionner</option>
-                  <option value="Basse">Basse</option>
-                  <option value="Normale">Normale</option>
-                  <option value="Haute">Haute</option>
-                  <option value="Urgente">Urgente</option>
-                </select>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="assignedTo">Assigné à</label>
+                  <input
+                    type="text"
+                    id="assignedTo"
+                    name="assignedTo"
+                    value={formData.assignedTo}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="percentDone">% réalisé</label>
+                  <input
+                    type="number"
+                    id="percentDone"
+                    name="percentDone"
+                    value={formData.percentDone}
+                    onChange={handleChange}
+                    min="0"
+                    max="100"
+                  />
+                </div>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="assignedTo">Assigné à</label>
-                <input
-                  type="text"
-                  id="assignedTo"
-                  name="assignedTo"
-                  value={formData.assignedTo}
-                  onChange={handleChange}
-                />
-              </div>
-
+              
               <div className="form-group">
                 <label htmlFor="targetVersion">Version cible</label>
                 <input
@@ -233,66 +294,9 @@ const ClientForm = () => {
                   onChange={handleChange}
                 />
               </div>
-
-              <div className="form-group">
-                <label htmlFor="parentTask">Tâche parente</label>
-                <input
-                  type="text"
-                  id="parentTask"
-                  name="parentTask"
-                  value={formData.parentTask}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="startDate">Début</label>
-                <DatePicker
-                  id="startDate"
-                  selected={formData.startDate}
-                  onChange={(date) => handleDateChange(date, 'startDate')}
-                  dateFormat="dd/MM/yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="dueDate">Échéance</label>
-                <DatePicker
-                  id="dueDate"
-                  selected={formData.dueDate}
-                  onChange={(date) => handleDateChange(date, 'dueDate')}
-                  dateFormat="dd/MM/yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="estimatedTime">Temps estimé (heures)</label>
-                <input
-                  type="number"
-                  id="estimatedTime"
-                  name="estimatedTime"
-                  value={formData.estimatedTime}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="percentDone">% réalisé</label>
-                <input
-                  type="number"
-                  id="percentDone"
-                  name="percentDone"
-                  value={formData.percentDone}
-                  onChange={handleChange}
-                  min="0"
-                  max="100"
-                />
-              </div>
             </div>
 
-            {/* Client Information */}
+            {/* Informations Client */}
             <div className="form-section">
               <h3>Informations Client</h3>
               
@@ -319,13 +323,14 @@ const ClientForm = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="clientEmail">Email contact client</label>
+                <label htmlFor="clientEmail">Email contact client*</label>
                 <input
                   type="email"
                   id="clientEmail"
                   name="clientEmail"
                   value={formData.clientEmail}
                   onChange={handleChange}
+                  required
                 />
               </div>
 
@@ -342,13 +347,14 @@ const ClientForm = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="siretNumber">N° SIRET</label>
+                <label htmlFor="siretNumber">N° SIRET*</label>
                 <input
                   type="text"
                   id="siretNumber"
                   name="siretNumber"
                   value={formData.siretNumber}
                   onChange={handleChange}
+                  required
                 />
               </div>
 
@@ -363,26 +369,28 @@ const ClientForm = () => {
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="creationDate">Date de création</label>
-                <DatePicker
-                  id="creationDate"
-                  selected={formData.creationDate}
-                  onChange={(date) => handleDateChange(date, 'creationDate')}
-                  dateFormat="dd/MM/yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="closureDate">Date de clôture</label>
-                <DatePicker
-                  id="closureDate"
-                  selected={formData.closureDate}
-                  onChange={(date) => handleDateChange(date, 'closureDate')}
-                  dateFormat="dd/MM/yyyy"
-                  className="datepicker-input"
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="creationDate">Date de création</label>
+                  <DatePicker
+                    id="creationDate"
+                    selected={formData.creationDate}
+                    onChange={(date) => handleDateChange(date, 'creationDate')}
+                    dateFormat="dd/MM/yyyy"
+                    className="datepicker-input"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="closureDate">Date de clôture</label>
+                  <DatePicker
+                    id="closureDate"
+                    selected={formData.closureDate}
+                    onChange={(date) => handleDateChange(date, 'closureDate')}
+                    dateFormat="dd/MM/yyyy"
+                    className="datepicker-input"
+                  />
+                </div>
               </div>
 
               <div className="form-group">
@@ -449,54 +457,58 @@ const ClientForm = () => {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="vatNumber">Numéro de TVA</label>
-                <input
-                  type="text"
-                  id="vatNumber"
-                  name="vatNumber"
-                  value={formData.vatNumber}
-                  onChange={handleChange}
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="vatNumber">Numéro de TVA</label>
+                  <input
+                    type="text"
+                    id="vatNumber"
+                    name="vatNumber"
+                    value={formData.vatNumber}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="vatDate">Date de TVA</label>
+                  <DatePicker
+                    id="vatDate"
+                    selected={formData.vatDate}
+                    onChange={(date) => handleDateChange(date, 'vatDate')}
+                    dateFormat="dd/MM/yyyy"
+                    className="datepicker-input"
+                  />
+                </div>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="vatDate">Date de TVA</label>
-                <DatePicker
-                  id="vatDate"
-                  selected={formData.vatDate}
-                  onChange={(date) => handleDateChange(date, 'vatDate')}
-                  dateFormat="dd/MM/yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="urssafRegime">Régime URSSAF</label>
-                <select
-                  id="urssafRegime"
-                  name="urssafRegime"
-                  value={formData.urssafRegime}
-                  onChange={handleChange}
-                >
-                  <option value="Indépendant">Indépendant</option>
-                  <option value="Auto-entrepreneur">Auto-entrepreneur</option>
-                  <option value="Portage salarial">Portage salarial</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="taxationRegime">Régime imposition</label>
-                <select
-                  id="taxationRegime"
-                  name="taxationRegime"
-                  value={formData.taxationRegime}
-                  onChange={handleChange}
-                >
-                  <option value="Réel simplifié">Réel simplifié</option>
-                  <option value="Réel normal">Réel normal</option>
-                  <option value="Micro-fiscal">Micro-fiscal</option>
-                </select>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="urssafRegime">Régime URSSAF</label>
+                  <select
+                    id="urssafRegime"
+                    name="urssafRegime"
+                    value={formData.urssafRegime}
+                    onChange={handleChange}
+                  >
+                    <option value="Indépendant">Indépendant</option>
+                    <option value="Auto-entrepreneur">Auto-entrepreneur</option>
+                    <option value="Portage salarial">Portage salarial</option>
+                  </select>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="taxationRegime">Régime imposition</label>
+                  <select
+                    id="taxationRegime"
+                    name="taxationRegime"
+                    value={formData.taxationRegime}
+                    onChange={handleChange}
+                  >
+                    <option value="Réel simplifié">Réel simplifié</option>
+                    <option value="Réel normal">Réel normal</option>
+                    <option value="Micro-fiscal">Micro-fiscal</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -504,28 +516,30 @@ const ClientForm = () => {
             <div className="form-section">
               <h3>Données financières</h3>
               
-              <div className="form-group">
-                <label htmlFor="cn2cDebt">Dette CN2C (€)</label>
-                <input
-                  type="number"
-                  id="cn2cDebt"
-                  name="cn2cDebt"
-                  value={formData.cn2cDebt}
-                  onChange={handleChange}
-                  min="0"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="keyManageDebt">Dette Key Manage (€)</label>
-                <input
-                  type="number"
-                  id="keyManageDebt"
-                  name="keyManageDebt"
-                  value={formData.keyManageDebt}
-                  onChange={handleChange}
-                  min="0"
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="cn2cDebt">Dette CN2C (€)</label>
+                  <input
+                    type="number"
+                    id="cn2cDebt"
+                    name="cn2cDebt"
+                    value={formData.cn2cDebt}
+                    onChange={handleChange}
+                    min="0"
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="keyManageDebt">Dette Key Manage (€)</label>
+                  <input
+                    type="number"
+                    id="keyManageDebt"
+                    name="keyManageDebt"
+                    value={formData.keyManageDebt}
+                    onChange={handleChange}
+                    min="0"
+                  />
+                </div>
               </div>
             </div>
 
@@ -606,50 +620,54 @@ const ClientForm = () => {
                 </label>
               </div>
 
-              <div className="form-group checkbox-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="cn2cContract"
-                    checked={formData.cn2cContract}
-                    onChange={handleChange}
+              <div className="form-row">
+                <div className="form-group checkbox-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="cn2cContract"
+                      checked={formData.cn2cContract}
+                      onChange={handleChange}
+                    />
+                    Contrat CN2C
+                  </label>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="cn2cContractDate">Date contrat CN2C</label>
+                  <DatePicker
+                    id="cn2cContractDate"
+                    selected={formData.cn2cContractDate}
+                    onChange={(date) => handleDateChange(date, 'cn2cContractDate')}
+                    dateFormat="dd/MM/yyyy"
+                    className="datepicker-input"
                   />
-                  Contrat CN2C
-                </label>
+                </div>
               </div>
-
-              <div className="form-group">
-                <label htmlFor="cn2cContractDate">Date contrat CN2C</label>
-                <DatePicker
-                  id="cn2cContractDate"
-                  selected={formData.cn2cContractDate}
-                  onChange={(date) => handleDateChange(date, 'cn2cContractDate')}
-                  dateFormat="dd/MM/yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-
-              <div className="form-group checkbox-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="keymanageContract"
-                    checked={formData.keymanageContract}
-                    onChange={handleChange}
+              
+              <div className="form-row">
+                <div className="form-group checkbox-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="keymanageContract"
+                      checked={formData.keymanageContract}
+                      onChange={handleChange}
+                    />
+                    Contrat Keymanage
+                  </label>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="keymanageContractDate">Date contrat Keymanage</label>
+                  <DatePicker
+                    id="keymanageContractDate"
+                    selected={formData.keymanageContractDate}
+                    onChange={(date) => handleDateChange(date, 'keymanageContractDate')}
+                    dateFormat="dd/MM/yyyy"
+                    className="datepicker-input"
                   />
-                  Contrat Keymanage
-                </label>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="keymanageContractDate">Date contrat Keymanage</label>
-                <DatePicker
-                  id="keymanageContractDate"
-                  selected={formData.keymanageContractDate}
-                  onChange={(date) => handleDateChange(date, 'keymanageContractDate')}
-                  dateFormat="dd/MM/yyyy"
-                  className="datepicker-input"
-                />
+                </div>
               </div>
             </div>
           </div>
