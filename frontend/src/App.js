@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import ClientForm from './components/ClientForm';
 import ClientsList from './components/ClientsList';
 import Login from "./Pages/Login";
 import AdminDashboard from "./Pages/AdminDashboard";
@@ -54,7 +53,7 @@ function App() {
           {/* 🛠️ Pages Admin */}
           <Route path="/admin/dashboard" element={<PrivateRoute element={<AdminDashboard />} />} />
           <Route path="/admin/edit-user/:id" element={<PrivateRoute element={<EditUserForm />} />} />
-          <Route path="/admin/clients" element={<PrivateRoute element={<ClientForm />} />} />
+          <Route path="/admin/clients" element={<PrivateRoute element={<ClientsList />} />} />
 
           {/* 🧑‍💼 Pages Agent */}
           <Route path="/agent/dashboard" element={<PrivateRoute element={<AgentDashboard />} />} />
@@ -62,12 +61,12 @@ function App() {
           <Route path="/agent/demandes" element={<PrivateRoute element={<Demandes />} />} />
           <Route path="/agent/taches" element={<PrivateRoute element={<Taches />} />} />
           <Route path="/agent/settings" element={<PrivateRoute element={<Settings />} />} />
-          <Route path="/agent/clients" element={<PrivateRoute element={<ClientForm />} />} />
-          
+          <Route path="/agent/clients" element={<PrivateRoute element={<ClientsList />} />} />
+
           {/* Routes pour les clients */}
           <Route path="/clients" element={<PrivateRoute element={<ClientsList />} />} />
-          <Route path="/clients/create" element={<PrivateRoute element={<ClientForm />} />} />
-          <Route path="/clients/edit/:id" element={<PrivateRoute element={<ClientForm />} />} />
+          <Route path="/clients/create" element={<PrivateRoute element={<ClientsList showCreateForm={true} />} />} />
+          <Route path="/clients/edit/:id" element={<PrivateRoute element={<ClientsList />} />} />
         </Routes>
       </main>
 

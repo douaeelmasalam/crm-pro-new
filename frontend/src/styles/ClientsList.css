@@ -1,116 +1,289 @@
+/* ClientsList.css */
+
+/* Conteneur principal */
 .clients-list-container {
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'Arial', sans-serif;
+}
+
+/* En-tête */
+.clients-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.clients-header h2 {
+  color: #333;
+  font-size: 24px;
+}
+
+/* Boutons */
+.btn-add, .btn-primary, .btn-secondary, .btn-view, .btn-edit, .btn-delete {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.btn-add {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.btn-add:hover {
+  background-color: #45a049;
+}
+
+.btn-primary {
+  background-color: #2196F3;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0b7dda;
+}
+
+.btn-primary:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #f44336;
+  color: white;
+  margin-left: 10px;
+}
+
+.btn-secondary:hover {
+  background-color: #da190b;
+}
+
+.btn-secondary:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-view {
+  background-color: #2196F3;
+  color: white;
+  margin-right: 5px;
+}
+
+.btn-view:hover {
+  background-color: #0b7dda;
+}
+
+.btn-edit {
+  background-color: #ff9800;
+  color: white;
+  margin-right: 5px;
+}
+
+.btn-edit:hover {
+  background-color: #e68a00;
+}
+
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #da190b;
+}
+
+/* Messages d'erreur et de chargement */
+.error-message {
+  color: #f44336;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #f44336;
+  border-radius: 4px;
+  background-color: #ffebee;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* Tableau des clients */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.clients-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.clients-table th, .clients-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.clients-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  color: #333;
+}
+
+.clients-table tr:hover {
+  background-color: #f5f5f5;
+}
+
+.actions-cell {
+  white-space: nowrap;
+}
+
+/* Formulaire de création */
+.client-form-container {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.client-form-container h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 992px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-section {
+  margin-bottom: 25px;
+}
+
+.form-section h3 {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* DatePicker */
+.datepicker-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Groupes de radio et checkbox */
+.radio-group, .checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-group label, .checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.radio-group input[type="radio"],
+.checkbox-group input[type="checkbox"] {
+  margin: 0;
+}
+
+/* Actions du formulaire */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
   }
   
   .clients-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .clients-header h2 {
-    margin: 0;
-    color: #333;
-  }
-  
-  .btn-add {
-    background-color: #28a745;
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  
-  .btn-add:hover {
-    background-color: #218838;
-  }
-  
-  .table-responsive {
-    overflow-x: auto;
-  }
-  
-  .clients-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  
-  .clients-table th,
-  .clients-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .clients-table th {
-    background-color: #f2f2f2;
-    font-weight: 600;
-    color: #333;
-  }
-  
-  .clients-table tr:hover {
-    background-color: #f5f5f5;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
   
   .actions-cell {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 5px;
   }
   
-  .btn-view,
-  .btn-edit,
-  .btn-delete {
-    padding: 6px 12px;
-    border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    text-decoration: none;
+  .btn-view, .btn-edit, .btn-delete {
+    width: 100%;
+    margin: 2px 0;
   }
-  
-  .btn-view {
-    background-color: #17a2b8;
-    color: white;
-  }
-  
-  .btn-edit {
-    background-color: #8fcdf9;
-    color: #212529;
-  }
-  
-  .btn-delete {
-    background-color: #ee5c5c;
-    color: white;
-    border: none;
-  }
-  
-  .btn-view:hover {
-    background-color: #085662;
-  }
-  
-  .btn-edit:hover {
-    background-color: #e0a800;
-  }
-  
-  .btn-delete:hover {
-    background-color: #c82333;
-  }
-  
-  .loading {
-    text-align: center;
-    padding: 20px;
-    font-size: 18px;
-    color: #666;
-  }
-  
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 12px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-  }
+}

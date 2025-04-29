@@ -6,8 +6,8 @@ import '../styles/Userform.css';
 import CreateUserForm from '../components/CreateUserForm';
 import UserList from '../components/UserList';
 import ProspectForm from '../components/ProspectForm';
-import ClientForm from '../components/ClientForm';
-import ClientsList from '../components/ClientsList'; // Import your ClientsList component
+import CombinedClientsList from '../components/ClientsList';
+
 const API_URL = 'http://localhost:5000/api';
 
 const AdminDashboard = () => {
@@ -16,15 +16,14 @@ const AdminDashboard = () => {
     users: 42,
     tickets: 15,
     openTickets: 23,
-    clients: 0, // Will be updated from API
-    prospects: 0 // Will be updated from API
+    clients: 0,
+    prospects: 0
   });
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check for state passed during navigation and fetch stats at component mount
   useEffect(() => {
     fetchStats();
     
@@ -33,17 +32,12 @@ const AdminDashboard = () => {
     }
   }, [location]);
 
-  // Function to fetch statistics
   const fetchStats = async () => {
     setLoading(true);
     try {
-      // Get prospects count from API
       const prospectsRes = await axios.get(`${API_URL}/prospects`);
-      
-      // Get clients count from API
       const clientsRes = await axios.get(`${API_URL}/clients`);
       
-      // Update statistics with real data
       setStats(prevStats => ({
         ...prevStats,
         prospects: prospectsRes.data.length,
@@ -62,19 +56,16 @@ const AdminDashboard = () => {
   };
 
   const handleUserUpdated = () => {
-    // Redirect to user list after update
     setActiveSection('users');
     navigate('/admin/dashboard', { state: { activeSection: 'users' } });
   };
 
   const handleProspectUpdated = () => {
-    // Refresh statistics and prospects view
     fetchStats();
     setActiveSection('prospects');
   };
 
   const handleClientUpdated = () => {
-    // Refresh statistics and clients view
     fetchStats();
     setActiveSection('clients');
   };
@@ -146,14 +137,7 @@ const AdminDashboard = () => {
       case 'clients':
         return (
           <div>
-            <ClientsList /> {/* Use your ClientsList component here */}
-          </div>
-        );
-
-      case 'createClient':
-        return (
-          <div>
-            <ClientForm onClientUpdated={handleClientUpdated} />
+            <CombinedClientsList onClientUpdated={handleClientUpdated} />
           </div>
         );
 
@@ -187,29 +171,44 @@ const AdminDashboard = () => {
         </div>
         <nav className="sidebar-nav">
           <ul>
-            <li className={activeSection === 'dashboard' ? 'active' : ''} onClick={() => setActiveSection('dashboard')}>
+            <li 
+              className={activeSection === 'dashboard' ? 'active' : ''} 
+              onClick={() => setActiveSection('dashboard')}
+            >
               Dashboard
             </li>
-            <li className={activeSection === 'users' ? 'active' : ''} onClick={() => setActiveSection('users')}>
+            <li 
+              className={activeSection === 'users' ? 'active' : ''} 
+              onClick={() => setActiveSection('users')}
+            >
               User Data
             </li>
-            <li className={activeSection === 'createUser' ? 'active' : ''} onClick={() => setActiveSection('createUser')}>
+            <li 
+              className={activeSection === 'createUser' ? 'active' : ''} 
+              onClick={() => setActiveSection('createUser')}
+            >
               Create/Edit User
             </li>
-            <li className={activeSection === 'tickets' ? 'active' : ''} onClick={() => setActiveSection('tickets')}>
+            <li 
+              className={activeSection === 'tickets' ? 'active' : ''} 
+              onClick={() => setActiveSection('tickets')}
+            >
               Tickets
             </li>
-            <li className={activeSection === 'createTicket' ? 'active' : ''} onClick={() => setActiveSection('createTicket')}>
+            <li 
+              className={activeSection === 'createTicket' ? 'active' : ''} 
+              onClick={() => setActiveSection('createTicket')}
+            >
               Create Ticket
             </li>
-            <li className={activeSection === 'clients' ? 'active' : ''} onClick={() => {
-              setActiveSection('clients');
-              fetchStats();
-            }}>
+            <li 
+              className={activeSection === 'clients' ? 'active' : ''} 
+              onClick={() => {
+                setActiveSection('clients');
+                fetchStats();
+              }}
+            >
               Fiches Clients
-            </li>
-            <li className={activeSection === 'createClient' ? 'active' : ''} onClick={() => setActiveSection('createClient')}>
-              Créer Client
             </li>
             <li 
               className={activeSection === 'prospects' ? 'active' : ''} 
@@ -220,7 +219,10 @@ const AdminDashboard = () => {
             >
               Prospects
             </li>
-            <li className={activeSection === 'documents' ? 'active' : ''} onClick={() => setActiveSection('documents')}>
+            <li 
+              className={activeSection === 'documents' ? 'active' : ''} 
+              onClick={() => setActiveSection('documents')}
+            >
               Documents
             </li>
           </ul>
@@ -235,7 +237,9 @@ const AdminDashboard = () => {
             <button className="logout-btn">Logout</button>
           </div>
         </header>
-        <main className="content-area">{renderSection()}</main>
+        <main className="content-area">
+          {renderSection()}
+        </main>
       </div>
     </div>
   );
