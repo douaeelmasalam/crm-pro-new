@@ -3,12 +3,23 @@ import { clientAPI } from '../services/api';
 import '../styles/ClientsList.css';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { FaEye, FaEdit, FaTrash, FaSearch, FaSort, FaSortUp, FaSortDown, FaPlus, FaTimes } from 'react-icons/fa';
 
 const CombinedClientsList = () => {
   // États pour la liste des clients
   const [clients, setClients] = useState([]);
+  const [filteredClients, setFilteredClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // États pour le tri et la recherche
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const [legalStatusFilter, setLegalStatusFilter] = useState('all');
+  
+  // États pour la pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [clientsPerPage] = useState(10);
   
   // État pour afficher/masquer le formulaire de création
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -60,6 +71,7 @@ const CombinedClientsList = () => {
       setLoading(true);
       const data = await clientAPI.getClients();
       setClients(data);
+      setFilteredClients(data);
       setLoading(false);
     } catch (err) {
       setError(err.message || 'Error fetching clients');
@@ -71,6 +83,67 @@ const CombinedClientsList = () => {
   useEffect(() => {
     fetchClients();
   }, []);
+
+  // Effet pour filtrer et trier les clients
+  useEffect(() => {
+    let result = [...clients];
+    
+    // Filtre par recherche 
+if (searchTerm) {
+  result = result.filter(client => 
+    (client.clientContactName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     client.clientEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     client.siretNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     client.legalStatus?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+}
+
+    
+    // Filtre par statut juridique
+    if (legalStatusFilter !== 'all') {
+      result = result.filter(client => client.legalStatus === legalStatusFilter);
+    }
+    
+    // Tri
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    
+    setFilteredClients(result);
+    setCurrentPage(1); // Réinitialiser à la première page après filtrage/tri
+  }, [clients, searchTerm, legalStatusFilter, sortConfig]);
+
+  // Fonction pour demander le tri
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Fonction pour obtenir l'icône de tri
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <FaSort />;
+    return sortConfig.direction === 'ascending' ? <FaSortUp /> : <FaSortDown />;
+  };
+
+  // Logique de pagination
+  const indexOfLastClient = currentPage * clientsPerPage;
+  const indexOfFirstClient = indexOfLastClient - clientsPerPage;
+  const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
+  const totalPages = Math.ceil(filteredClients.length / clientsPerPage);
+
+  // Changer de page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Fonctions de gestion du formulaire
   const handleChange = (e) => {
@@ -174,54 +247,130 @@ const CombinedClientsList = () => {
           className="btn-add" 
           onClick={() => setShowCreateForm(!showCreateForm)}
         >
-          {showCreateForm ? 'Annuler' : 'Ajouter un Client'}
+          {showCreateForm ? <><FaTimes /> Annuler</> : <><FaPlus /> Ajouter un Client</>}
         </button>
+      </div>
+
+      {/* Barre de recherche et filtres */}
+      <div className="search-filter-container">
+        <div className="search-box">
+          <FaSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Rechercher un client..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="filter-box">
+          <label htmlFor="legalStatusFilter">Statut juridique :</label>
+          <select
+            id="legalStatusFilter"
+            value={legalStatusFilter}
+            onChange={(e) => setLegalStatusFilter(e.target.value)}
+          >
+            <option value="all">Tous</option>
+            <option value="SARL">SARL</option>
+            <option value="SAS">SAS</option>
+            <option value="SASU">SASU</option>
+            <option value="EI">Entreprise Individuelle</option>
+            <option value="EURL">EURL</option>
+            <option value="Auto-entrepreneur">Auto-entrepreneur</option>
+          </select>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
-      {clients.length === 0 ? (
+      {filteredClients.length === 0 ? (
         <p>Aucun client trouvé.</p>
       ) : (
-        <div className="table-responsive">
-          <table className="clients-table">
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Email</th>
-                <th>Téléphone</th>
-                <th>SIRET</th>
-                <th>Statut Juridique</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((client) => (
-                <tr key={client._id}>
-                  <td>{client.clientContactName || '—'}</td>
-                  <td>{client.clientEmail}</td>
-                  <td>{client.clientPhone || '—'}</td>
-                  <td>{client.siretNumber}</td>
-                  <td>{client.legalStatus}</td>
-                  <td className="actions-cell">
-                    <button className="btn-view">
-                      Voir
-                    </button>
-                    <button className="btn-edit">
-                      Modifier
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(client._id)} 
-                      className="btn-delete"
-                    >
-                      Supprimer
-                    </button>
-                  </td>
+        <>
+          <div className="table-responsive">
+            <table className="clients-table">
+              <thead>
+                <tr>
+                  <th onClick={() => requestSort('clientContactName')}>
+                    <div className="sortable-header">
+                      Nom {getSortIcon('clientContactName')}
+                    </div>
+                  </th>
+                  <th onClick={() => requestSort('clientEmail')}>
+                    <div className="sortable-header">
+                      Email {getSortIcon('clientEmail')}
+                    </div>
+                  </th>
+                  <th>Téléphone</th>
+                  <th>SIRET</th>
+                  <th onClick={() => requestSort('legalStatus')}>
+                    <div className="sortable-header">
+                      Statut Juridique {getSortIcon('legalStatus')}
+                    </div>
+                  </th>
+                  <th>Actions</th>
                 </tr>
+              </thead>
+              <tbody>
+                {currentClients.map((client) => (
+                  <tr key={client._id}>
+                    <td>{client.clientContactName || '—'}</td>
+                    <td>{client.clientEmail}</td>
+                    <td>{client.clientPhone || '—'}</td>
+                    <td>{client.siretNumber}</td>
+                    <td>{client.legalStatus}</td>
+                    <td className="actions-cell">
+                      <button className="btn-icon btn-view" title="Voir">
+                        <FaEye />
+                      </button>
+                      <button className="btn-icon btn-edit" title="Modifier">
+                        <FaEdit />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(client._id)} 
+                        className="btn-icon btn-delete"
+                        title="Supprimer"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button 
+                onClick={() => paginate(currentPage - 1)} 
+                disabled={currentPage === 1}
+                className="pagination-button"
+              >
+                Précédent
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                <button
+                  key={number}
+                  onClick={() => paginate(number)}
+                  className={`pagination-button ${currentPage === number ? 'active' : ''}`}
+                >
+                  {number}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
+              
+              <button 
+                onClick={() => paginate(currentPage + 1)} 
+                disabled={currentPage === totalPages}
+                className="pagination-button"
+              >
+                Suivant
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Formulaire de création de client */}
