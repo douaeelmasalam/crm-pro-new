@@ -281,9 +281,6 @@ const ProspectForm = ({ onProspectUpdated }) => {
           <table className="prospect-table">
             <thead>
               <tr>
-                <th>
-                  <input type="checkbox" />
-                </th>
                 <th>Nom Prospect</th>
                 <th>Société</th>
                 <th>E-mail</th>
@@ -297,9 +294,6 @@ const ProspectForm = ({ onProspectUpdated }) => {
             <tbody>
               {prospects.map((prospect) => (
                 <tr key={prospect._id}>
-                  <td>
-                    <input type="checkbox" />
-                  </td>
                   <td>{prospect.nom}</td>
                   <td>{prospect.societe}</td>
                   <td>{prospect.email}</td>

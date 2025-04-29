@@ -78,18 +78,18 @@
   }
   
   .btn-edit {
-    background-color: #ffc107;
+    background-color: #8fcdf9;
     color: #212529;
   }
   
   .btn-delete {
-    background-color: #dc3545;
+    background-color: #ee5c5c;
     color: white;
     border: none;
   }
   
   .btn-view:hover {
-    background-color: #138496;
+    background-color: #085662;
   }
   
   .btn-edit:hover {
