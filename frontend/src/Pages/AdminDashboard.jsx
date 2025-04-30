@@ -7,15 +7,16 @@ import CreateUserForm from '../components/CreateUserForm';
 import UserList from '../components/UserList';
 import ProspectForm from '../components/ProspectForm';
 import CombinedClientsList from '../components/ClientsList';
-
+import CreateTicketForm from '../components/CreateTicketForm';
+import TicketList from '../components/TicketList';
 const API_URL = 'http://localhost:5000/api';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [stats, setStats] = useState({
-    users: 6,
+    users: 42,
     tickets: 15,
-    openTickets: 8,
+    openTickets: 23,
     clients: 0,
     prospects: 0
   });
@@ -118,21 +119,20 @@ const AdminDashboard = () => {
           </div>
         );
 
-      case 'tickets':
-        return (
-          <div>
-            <h2>Tickets</h2>
-            <p>Ticket list will be implemented here.</p>
-          </div>
-        );
-
-      case 'createTicket':
-        return (
-          <div>
-            <h2>Create Ticket</h2>
-            <p>Ticket creation form will be implemented here.</p>
-          </div>
-        );
+        case 'tickets':
+          return (
+            <div>
+              <h2>Tickets</h2>
+              <TicketList />
+            </div>
+          );
+                case 'createTicket':
+          return (
+            <div>
+              <h2>Create Ticket</h2>
+              <CreateTicketForm />
+            </div>
+          );
 
       case 'clients':
         return (

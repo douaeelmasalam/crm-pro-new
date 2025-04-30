@@ -1,27 +1,30 @@
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./Routes/authRoutes');
-const errorHandler = require('./Middleware/errorHandler');
 const userRoutes = require('./Routes/user');
 const prospectRoutes = require('./Routes/prospectRoutes');
+const ticketRoutes = require('./Routes/ticket');
+const errorHandler = require('./Middleware/errorHandler');
 
 const app = express();
 
-// Configuration CORS
+// Middleware CORS
 app.use(cors({
-  origin: 'http://localhost:3000', // URL de votre frontend
-  credentials: true 
+  origin: ['http://localhost:3000'], // Ajoute ici d'autres URLs frontend si besoin
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 
 // Middleware pour parser le JSON
 app.use(express.json());
 
-// Routes
+// Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/prospects', prospectRoutes);
+app.use('/api/tickets', ticketRoutes);
 
-// Nouvelle route pour le tableau de bord
+// Exemple de route tableau de bord
 app.get('/api/dashboard', (req, res) => {
   res.json({
     status: 'success',
@@ -29,7 +32,7 @@ app.get('/api/dashboard', (req, res) => {
   });
 });
 
-// Middleware de gestion d'erreurs (à placer en dernier)
+// Gestion des erreurs globales
 app.use(errorHandler);
 
 module.exports = app;

@@ -5,7 +5,7 @@ import Login from "./Pages/Login";
 import AdminDashboard from "./Pages/AdminDashboard";
 import AgentDashboard from "./Pages/AgentDashboard";
 import EditUserForm from "./components/EditUserForm";
-import Tickets from "./Pages/Tickets";
+import CreateTicketForm from "./components/CreateTicketForm";
 import Demandes from "./Pages/Demandes";
 import Taches from "./Pages/Taches";
 import Settings from "./Pages/Settings";
@@ -54,10 +54,10 @@ function App() {
           <Route path="/admin/dashboard" element={<PrivateRoute element={<AdminDashboard />} />} />
           <Route path="/admin/edit-user/:id" element={<PrivateRoute element={<EditUserForm />} />} />
           <Route path="/admin/clients" element={<PrivateRoute element={<ClientsList />} />} />
+          <Route path="/admin/Creat-Ticket" element={<PrivateRoute element={<CreateTicketForm />} />} />
 
           {/* 🧑‍💼 Pages Agent */}
           <Route path="/agent/dashboard" element={<PrivateRoute element={<AgentDashboard />} />} />
-          <Route path="/agent/tickets" element={<PrivateRoute element={<Tickets />} />} />
           <Route path="/agent/demandes" element={<PrivateRoute element={<Demandes />} />} />
           <Route path="/agent/taches" element={<PrivateRoute element={<Taches />} />} />
           <Route path="/agent/settings" element={<PrivateRoute element={<Settings />} />} />

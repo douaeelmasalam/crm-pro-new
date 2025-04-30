@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
+const connectDB = require('./Config/db'); // <-- Respecte la casse du dossier
 const app = require('./App');
-const clientRoutes = require('./routes/clientRoutes');
+const clientRoutes = require('./Routes/clientRoutes'); // <-- Respecte aussi ici la casse
 
 // Charger les variables d'environnement
 dotenv.config();
