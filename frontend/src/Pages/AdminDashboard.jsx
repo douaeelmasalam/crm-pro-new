@@ -13,9 +13,9 @@ const API_URL = 'http://localhost:5000/api';
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [stats, setStats] = useState({
-    users: 42,
+    users: 6,
     tickets: 15,
-    openTickets: 23,
+    openTickets: 8,
     clients: 0,
     prospects: 0
   });
