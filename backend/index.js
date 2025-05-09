@@ -1,7 +1,6 @@
 const dotenv = require('dotenv');
 const connectDB = require('./Config/db'); // <-- Respecte la casse du dossier
 const app = require('./App');
-const clientRoutes = require('./Routes/clientRoutes'); // <-- Respecte aussi ici la casse
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -9,8 +8,6 @@ dotenv.config();
 // Connexion à la base de données
 connectDB();
 
-// Routes additionnelles
-app.use('/api/clients', clientRoutes);
 
 // Route par défaut
 app.get('/', (req, res) => {

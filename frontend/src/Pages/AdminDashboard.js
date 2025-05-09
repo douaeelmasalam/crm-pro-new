@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import '../styles/AdminDashboard.css';
 import '../styles/Userform.css';
 import CreateUserForm from '../components/CreateUserForm';
 import UserList from '../components/UserList';
 import ProspectForm from '../components/ProspectForm';
-import CombinedClientsList from '../components/ClientsList';
 import CreateTicketForm from '../components/CreateTicketForm';
 import TicketList from '../components/TicketList';
+import ClientForm from '../components/ClientForm';
+
 const API_URL = 'http://localhost:5000/api';
 
 const AdminDashboard = () => {
@@ -17,74 +18,146 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     users: 0,
     tickets: 0,
-    openTickets: 0,
-    pendingTickets: 0,
-    inProgressTickets: 0,
-    resolvedTickets: 0,
+    ouvertTickets: 0,
+    enCoursTickets: 0,
+    resoluTickets: 0,
+    fermeTickets: 0,
     clients: 0,
     prospects: 0
   });
   const [ticketEvolutionData, setTicketEvolutionData] = useState([]);
+  const [ticketPriorityData, setTicketPriorityData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [clients, setClients] = useState([]);
   
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Couleurs pour le pie chart
+  const PRIORITY_COLORS = {
+    faible: '#10b9cf',    // vert
+    moyenne: '#2b6976',   
+    élevée: '#f59e0b',    
+    critique: '#7d3c98'   // violet
+  };
+
+useEffect(() => {
+  const fetchStats = () => {
+    // logique pour récupérer les stats ici
+  };
+  fetchStats();
+  if (location.state && location.state.activeSection) {
+    setActiveSection(location.state.activeSection);
+  }
+}, [location]);
+
+
   useEffect(() => {
-    fetchStats();
-    
-    if (location.state && location.state.activeSection) {
-      setActiveSection(location.state.activeSection);
-    }
-  }, [location]);
+    fetchClients();
+  }, []);
 
   const fetchStats = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
-      // Fetch all necessary data in parallel
-      const [prospectsRes, clientsRes, usersRes, ticketsRes] = await Promise.all([
+      const results = await Promise.allSettled([
         axios.get(`${API_URL}/prospects`),
         axios.get(`${API_URL}/clients`),
         axios.get(`${API_URL}/users`),
         axios.get(`${API_URL}/tickets`)
       ]);
       
-      // Process ticket statistics
-      const tickets = ticketsRes.data;
-      const pendingTickets = tickets.filter(ticket => ticket.status === 'pending').length;
-      const inProgressTickets = tickets.filter(ticket => ticket.status === 'in-progress').length;
-      const resolvedTickets = tickets.filter(ticket => ticket.status === 'resolved').length;
-      const openTickets = pendingTickets + inProgressTickets;
+      const prospectsData = results[0].status === 'fulfilled' ? results[0].value.data : [];
+      const clientsData = results[1].status === 'fulfilled' ? results[1].value.data : [];
+      const usersData = results[2].status === 'fulfilled' ? results[2].value.data : [];
+      const ticketsData = results[3].status === 'fulfilled' ? results[3].value.data : [];
       
-      // Update all stats
-      setStats({
-        prospects: prospectsRes.data.length,
-        clients: clientsRes.data.length,
-        users: usersRes.data.length,
-        tickets: tickets.length,
-        openTickets,
-        pendingTickets,
-        inProgressTickets,
-        resolvedTickets
-      });
-      
-      // Process ticket evolution data
-      generateTicketEvolutionData(tickets);
+      updateStats(prospectsData, clientsData, usersData, ticketsData);
+      generateTicketEvolutionData(ticketsData);
+      generateTicketPriorityData(ticketsData);
       
     } catch (err) {
       console.error('Erreur lors du chargement des statistiques:', err);
+      setError('Erreur lors du chargement des statistiques. Veuillez réessayer.');
+      setTicketEvolutionData([]);
+      setTicketPriorityData([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Generate ticket evolution data based on ticket creation dates
+  const updateStats = (prospects, clients, users, tickets) => {
+    // On normalise les statuts pour compter correctement selon les nouveaux statuts
+    const ouvertTickets = tickets.filter(ticket => 
+      ticket.status === 'ouvert' || 
+      ticket.status === 'Ouvert' || 
+      ticket.status === 'pending' || 
+      ticket.status === 'En attente' || 
+      (ticket.status && ticket.status.toLowerCase() === 'ouvert')
+    ).length;
+    
+    const enCoursTickets = tickets.filter(ticket => 
+      ticket.status === 'en cours' || 
+      ticket.status === 'En Cours' || 
+      ticket.status === 'En cours' || 
+      ticket.status === 'in-progress' || 
+      (ticket.status && ticket.status.toLowerCase() === 'en cours')
+    ).length;
+    
+    const resoluTickets = tickets.filter(ticket => 
+      ticket.status === 'résolu' || 
+      ticket.status === 'Résolu' || 
+      ticket.status === 'resolved' || 
+      (ticket.status && ticket.status.toLowerCase() === 'résolu')
+    ).length;
+    
+    const fermeTickets = tickets.filter(ticket => 
+      ticket.status === 'fermé' || 
+      ticket.status === 'Fermé' || 
+      ticket.status === 'closed' || 
+      (ticket.status && ticket.status.toLowerCase() === 'fermé')
+    ).length;
+    
+    setStats({
+      prospects: prospects.length,
+      clients: clients.length,
+      users: users.length,
+      tickets: tickets.length,
+      ouvertTickets,
+      enCoursTickets,
+      resoluTickets,
+      fermeTickets
+    });
+  };
+
+  const fetchClients = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`${API_URL}/clients`);
+      setClients(response.data);
+    } catch (err) {
+      console.error('Erreur lors du chargement des clients:', err);
+      setError('Erreur lors du chargement des clients. Veuillez réessayer.');
+      setClients([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const generateTicketEvolutionData = (tickets) => {
+    if (!Array.isArray(tickets) || tickets.length === 0) {
+      setTicketEvolutionData([]);
+      return;
+    }
+    
     const now = new Date();
     const tenDaysAgo = new Date(now);
-    tenDaysAgo.setDate(now.getDate() - 9); // 10 days including today
+    tenDaysAgo.setDate(now.getDate() - 9);
     
-    // Create an array for the last 10 days
     const days = [];
     const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
     
@@ -94,14 +167,15 @@ const AdminDashboard = () => {
       
       days.push({
         date: new Date(date),
-        formattedDate: date.toISOString().split('T')[0], // YYYY-MM-DD
+        formattedDate: date.toISOString().split('T')[0],
         day: dayNames[date.getDay()],
         tickets: 0
       });
     }
     
-    // Count tickets created on each day
     tickets.forEach(ticket => {
+      if (!ticket.createdAt) return;
+      
       const ticketDate = new Date(ticket.createdAt);
       const formattedTicketDate = ticketDate.toISOString().split('T')[0];
       
@@ -111,7 +185,6 @@ const AdminDashboard = () => {
       }
     });
     
-    // Format for the chart
     const chartData = days.map(day => ({
       day: `${day.day} ${day.date.getDate()}/${day.date.getMonth() + 1}`,
       tickets: day.tickets
@@ -120,6 +193,49 @@ const AdminDashboard = () => {
     setTicketEvolutionData(chartData);
   };
 
+ const generateTicketPriorityData = (tickets) => {
+  if (!Array.isArray(tickets) || tickets.length === 0) {
+    setTicketPriorityData([]);
+    return;
+  }
+  
+  // Comptage des tickets par priorité
+  const priorityCounts = {
+    faible: 0,
+    moyenne: 0,
+    élevée: 0, 
+    critique: 0
+  };
+  
+  tickets.forEach(ticket => {
+    if (ticket.priority) {
+      // Normaliser la priorité pour gérer les variations d'orthographe
+      let priority = ticket.priority.toLowerCase();
+      
+      // Remplacer toutes les variantes de "elevee" par "élevée"
+      if (priority === 'elevee' || priority === 'elevée' || priority === 'élevee') {
+        priority = 'élevée';
+      }
+      
+      if (priorityCounts.hasOwnProperty(priority)) {
+        priorityCounts[priority]++;
+      }
+    }
+  });
+  
+  // Conversion en format adapté pour le PieChart
+  const data = Object.keys(priorityCounts).map(priority => ({
+    name: priority.charAt(0).toUpperCase() + priority.slice(1), // Première lettre en majuscule
+    value: priorityCounts[priority],
+    color: PRIORITY_COLORS[priority]
+  }));
+  
+  // Optionnel: filtrer les entrées avec valeur 0
+  const filteredData = data.filter(item => item.value > 0);
+  
+  setTicketPriorityData(filteredData);
+};
+
   const handleEditUser = (id) => {
     navigate(`/admin/edit-user/${id}`);
   };
@@ -127,6 +243,7 @@ const AdminDashboard = () => {
   const handleUserUpdated = () => {
     setActiveSection('users');
     navigate('/admin/dashboard', { state: { activeSection: 'users' } });
+    fetchStats();
   };
 
   const handleProspectUpdated = () => {
@@ -134,14 +251,81 @@ const AdminDashboard = () => {
     setActiveSection('prospects');
   };
 
-  const handleClientUpdated = () => {
-    fetchStats();
-    setActiveSection('clients');
-  };
-
   const handleTicketUpdated = () => {
     fetchStats();
   };
+
+  const StatCard = ({ title, value, className = '' }) => (
+    <div className={`stat-card ${className}`}>
+      <h3>{title}</h3>
+      <p className="stat-value">{value}</p>
+    </div>
+  );
+
+  const TicketStatCard = ({ title, value, status = '' }) => (
+    <div className={`ticket-stat-card ${status}`}>
+      <h3>{title}</h3>
+      <p className="ticket-stat-value">{value}</p>
+    </div>
+  );
+
+  const TicketEvolutionChart = () => (
+    <div className="ticket-evolution-graph" style={{ width: '100%', height: 250 }}>
+      {ticketEvolutionData.length > 0 ? (
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart 
+            data={ticketEvolutionData} 
+            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="day" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Line 
+              type="monotone" 
+              dataKey="tickets" 
+              stroke="#3498db" 
+              strokeWidth={2}
+              dot={{ r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="no-data">Aucune donnée disponible</div>
+      )}
+    </div>
+  );
+
+  const TicketPriorityChart = () => (
+    <div className="ticket-priority-chart" style={{ width: '100%', height: 250 }}>
+      {ticketPriorityData.length > 0 ? (
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={ticketPriorityData}
+              cx="50%"
+              cy="50%"
+              labelLine={true}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              nameKey="name"
+              label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+            >
+              {ticketPriorityData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value) => [`${value} ticket(s)`, 'Quantité']} />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="no-data">Aucune donnée disponible</div>
+      )}
+    </div>
+  );
 
   const renderDashboard = () => {
     return (
@@ -149,63 +333,33 @@ const AdminDashboard = () => {
         <h2>Dashboard Overview</h2>
         {loading ? (
           <div className="loading">Chargement des statistiques...</div>
+        ) : error ? (
+          <div className="error-message">{error}</div>
         ) : (
           <>
             <div className="stats-container">
-              <div className="stat-card">
-                <h3>Users</h3>
-                <p className="stat-value">{stats.users}</p>
-              </div>
-              <div className="stat-card">
-                <h3>Clients</h3>
-                <p className="stat-value">{stats.clients}</p>
-              </div>
-              <div className="stat-card">
-                <h3>Prospects</h3>
-                <p className="stat-value">{stats.prospects}</p>
-              </div>
+              <StatCard title="Users" value={stats.users} />
+              <StatCard title="Clients" value={stats.clients} />
+              <StatCard title="Prospects" value={stats.prospects} />
             </div>
             
-            {/* Ticket Statistics Cards */}
             <div className="ticket-stats-container">
-              <div className="ticket-stat-card">
-                <h3>Total Tickets</h3>
-                <p className="ticket-stat-value">{stats.tickets}</p>
-              </div>
-              <div className="ticket-stat-card pending">
-                <h3>En attente</h3>
-                <p className="ticket-stat-value">{stats.pendingTickets}</p>
-              </div>
-              <div className="ticket-stat-card in-progress">
-                <h3>En cours</h3>
-                <p className="ticket-stat-value">{stats.inProgressTickets}</p>
-              </div>
-              <div className="ticket-stat-card resolved">
-                <h3>Résolus</h3>
-                <p className="ticket-stat-value">{stats.resolvedTickets}</p>
-              </div>
+              <TicketStatCard title="Total Tickets" value={stats.tickets} />
+              <TicketStatCard title="Ouvert" value={stats.ouvertTickets} status="ouvert" />
+              <TicketStatCard title="En cours" value={stats.enCoursTickets} status="en-cours" />
+              <TicketStatCard title="Résolu" value={stats.resoluTickets} status="resolu" />
+              <TicketStatCard title="Fermé" value={stats.fermeTickets} status="ferme" />
             </div>
             
-            {/* Ticket Evolution Graph */}
-            <div className="ticket-evolution-card">
-              <h3>Évolution des tickets</h3>
-              <div className="ticket-evolution-graph">
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={ticketEvolutionData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="tickets" 
-                      stroke="#3498db" 
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+            <div className="charts-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+              <div className="chart-card" style={{ flex: '1 1 450px' }}>
+                <h3>Évolution des tickets</h3>
+                <TicketEvolutionChart />
+              </div>
+              
+              <div className="chart-card" style={{ flex: '1 1 450px' }}>
+                <h3>Répartition des tickets par priorité</h3>
+                <TicketPriorityChart />
               </div>
             </div>
           </>
@@ -214,68 +368,69 @@ const AdminDashboard = () => {
     );
   };
 
+  const renderClientsSection = () => {
+    return (
+      <div>
+        <h2>Fiches Clients</h2>
+        {loading ? (
+          <div className="loading">Chargement des clients...</div>
+        ) : error ? (
+          <div className="error-message">{error}</div>
+        ) : (
+          <ClientForm clients={clients} />
+        )}
+      </div>
+    );
+  };
+
   const renderSection = () => {
     switch (activeSection) {
-      case 'dashboard':
-        return renderDashboard();
+      case 'dashboard': return renderDashboard();
+      case 'users': return (
+        <div>
+          <h2>User Data</h2>
+          <UserList onEditUser={handleEditUser} />
+        </div>
+      );
+      case 'createUser': return (
+        <div>
+          <h2>Create User</h2>
+          <CreateUserForm onUserUpdated={handleUserUpdated} />
+        </div>
+      );
+      case 'tickets': return (
+        <div>
+          <h2>Tickets</h2>
+          <TicketList onTicketUpdated={handleTicketUpdated} />
+        </div>
+      );
+      case 'createTicket': return (
+        <div>
+          <h2>Create Ticket</h2>
+          <CreateTicketForm onTicketCreated={handleTicketUpdated} />
+        </div>
+      );
+      case 'clients': return renderClientsSection();
+      case 'prospects': return (
+        <div>
+          <h2>Gestion des Prospects</h2>
+          <ProspectForm onProspectUpdated={handleProspectUpdated} />
+        </div>
+      );
+      case 'documents': return (
+        <div>
+          <h2>Documents</h2>
+          <p>Document management will be implemented here.</p>
+        </div>
+      );
+      default: return <div>Select a section</div>;
+    }
+  };
 
-      case 'users':
-        return (
-          <div>
-            <h2>User Data</h2>
-            <UserList onEditUser={handleEditUser} />
-          </div>
-        );
-
-      case 'createUser':
-        return (
-          <div>
-            <h2>Create User</h2>
-            <CreateUserForm onUserUpdated={handleUserUpdated} />
-          </div>
-        );
-
-      case 'tickets':
-        return (
-          <div>
-            <h2>Tickets</h2>
-            <TicketList onTicketUpdated={handleTicketUpdated} />
-          </div>
-        );
-      
-      case 'createTicket':
-        return (
-          <div>
-            <h2>Create Ticket</h2>
-            <CreateTicketForm onTicketCreated={handleTicketUpdated} />
-          </div>
-        );
-
-      case 'clients':
-        return (
-          <div>
-            <CombinedClientsList onClientUpdated={handleClientUpdated} />
-          </div>
-        );
-
-      case 'prospects':
-        return (
-          <div>
-            <h2>Gestion des Prospects</h2>
-            <ProspectForm onProspectUpdated={handleProspectUpdated} />
-          </div>
-        );
-
-      case 'documents':
-        return (
-          <div>
-            <h2>Documents</h2>
-            <p>Document management will be implemented here.</p>
-          </div>
-        );
-
-      default:
-        return <div>Select a section</div>;
+  const refreshData = () => {
+    fetchStats();
+    if (activeSection === 'clients') {
+      fetchClients();
     }
   };
 
@@ -283,8 +438,7 @@ const AdminDashboard = () => {
     <div className="admin-container">
       <div className="admin-sidebar">
         <div className="sidebar-header">
-          <h1>CRM-PRO</h1>
-          <p>Admin Panel</p>
+          <h1>CRM-MIACORP</h1>
         </div>
         <nav className="sidebar-nav">
           <ul>
@@ -310,7 +464,7 @@ const AdminDashboard = () => {
               className={activeSection === 'tickets' ? 'active' : ''} 
               onClick={() => {
                 setActiveSection('tickets');
-                fetchStats(); // Refresh stats when visiting tickets page
+                fetchStats();
               }}
             >
               Tickets
@@ -353,7 +507,9 @@ const AdminDashboard = () => {
         <header className="admin-header">
           <h2>Admin Dashboard</h2>
           <div className="user-info">
-            <span>Admin User</span>
+            <button className="refresh-btn" onClick={refreshData}>
+              Rafraîchir les données
+            </button>
             <button className="logout-btn">Logout</button>
           </div>
         </header>

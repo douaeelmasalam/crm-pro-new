@@ -1,0 +1,311 @@
+/* ClientForm.css - Version améliorée */
+
+/* Styles généraux pour le conteneur */
+.client-container {
+  background-color: #f8f9fa;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 13px;
+  color: #333;
+}
+
+/* En-tête */
+.client-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #1a3a6b;
+  color: white;
+  border-bottom: 1px solid #d4d4d4;
+}
+
+.client-header-info {
+  display: flex;
+  align-items: center;
+}
+
+.client-icon {
+  font-size: 16px;
+  margin-right: 10px;
+  background-color: #fff;
+  color: #1a3a6b;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.client-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Contenu */
+.client-content {
+  padding: 10px;
+}
+
+/* Organisation en deux colonnes fixes */
+.form-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* Colonnes gauche et droite empilant les sections */
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Sections du formulaire - Style plus professionnel */
+.section-container {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.section-header {
+  background-color: #f3f4f6;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  color: #111827;
+  font-size: 13px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section-header:hover {
+  background-color: #e5e7eb;
+}
+
+.section-header svg {
+  margin-right: 8px;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.section-header span {
+  flex-grow: 1;
+}
+
+.section-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-icon {
+  font-size: 12px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.action-icon:hover {
+  color: #1a3a6b;
+}
+
+.section-content {
+  padding: 12px;
+  background-color: #fff;
+}
+
+/* Lignes et groupes du formulaire - Plus compact */
+.form-row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-group label {
+  font-size: 12px;
+  color: #4b5563;
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+
+.form-group input, 
+.form-group select {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+  height: 32px;
+  background-color: #fff;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #1a3a6b;
+  box-shadow: 0 0 0 2px rgba(26, 58, 107, 0.1);
+}
+
+/* Style pour le datepicker */
+.datepicker-input {
+  width: 100%;
+  height: 32px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  background-color: #fff;
+}
+
+/* Champ avec bouton de recherche */
+.input-with-search {
+  display: flex;
+  position: relative;
+}
+
+.input-with-search input {
+  flex: 1;
+  padding-right: 30px;
+}
+
+.search-button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 32px;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  color: #6b7280;
+  border-left: 1px solid #d1d5db;
+  background-color: #f3f4f6;
+}
+
+.search-button:hover {
+  color: #1a3a6b;
+  background-color: #e5e7eb;
+}
+
+/* Boutons */
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+  padding: 10px 0;
+}
+
+.button-primary {
+  background-color: #1a3a6b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.button-primary:hover {
+  background-color: #153060;
+}
+
+.button-secondary {
+  background-color: #f3f4f6;
+  color: #111827;
+  border: 1px solid #d1d5db;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.button-secondary:hover {
+  background-color: #e5e7eb;
+}
+
+/* Éléments date - style spécifique du calendrier */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+/* Pour s'assurer que la popup du datepicker reste par-dessus */
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+/* Ajustement pour l'icône du calendrier */
+.datepicker-input {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%234b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 34px;
+}
+
+/* Style pour le bouton de fermeture (X) */
+.close-button {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.close-button:hover {
+  color: #dd731d;
+}
+
+/* Style pour le bouton "Ajouter un client" */
+.add-client-button {
+  background-color: #1a3a6b;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.add-client-button:hover {
+  background-color: #153060;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .form-layout {
+    flex-direction: column;
+  }
+  
+  .column {
+    width: 100%;
+  }
+}
