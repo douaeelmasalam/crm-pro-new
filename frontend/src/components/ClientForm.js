@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaChevronDown, FaChevronRight, FaStar, FaLock, FaCog, FaUser, FaSave, FaTimes } from 'react-icons/fa';
+import { FaChevronDown, FaChevronRight, FaStar, FaLock, FaCog, FaUser, FaSave, FaTimes, FaEye, FaPlus } from 'react-icons/fa';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import '../styles/ClientForm.css';
@@ -12,80 +12,73 @@ const ClientForm = ({ onSave, onCancel }) => {
     numeroRCS: '877 502 S11 R.C.S. Créteil',
     codeAPE: '8 CHE DES CARRIER 94310 ORLY',
     nomPrenom: 'Nasser MAXOUF',
+    nomCommercial: 'Qui manage',
+    manager: 'Président',
     dateCreation: new Date('2015-12-11'),
     adresseSiege: '8 CHE DES CARRIER 94310 ORLY',
     dateCloture: new Date('2023-12-31'),
     siret: '30943154500014',
     capitaleSocial: '1 000,00 €',
-    inscriptionRM: 'cocc',
-    
-    // Informations juridiques
-    siren: '',
-    denomination: '',
-    pays: '',
-    codeAPEJuridique: '',
-    dirigeant: '',
-    dateCreationJuridique: null,
-    activitePrincipale: '',
-    
-    // Informations sur le siège social
-    siretSiege: '',
-    codeAPESiege: '',
-    adresseSiegeSocial: '',
-    ville: '',
-    codePostal: '',
-    emailSiege: '',
-    telFixeSiege: '',
-    faxSiege: '',
-    
-    // Contact principal
-    nomContactPrincipal: '',
-    prenomContactPrincipal: '',
-    qualiteContactPrincipal: '',
-    fonctionContactPrincipal: '',
-    servicesContactPrincipal: '',
-    emailContactPrincipal: '',
-    mobileContactPrincipal: '',
-    telFixeContactPrincipal: '',
-    faxContactPrincipal: '',
-    
-    // Informations client/fournisseur
-    code: '',
-    familleClient: '',
-    sousFamille: '',
-    
-    // Comptabilité
-    compteComptable: '',
-    compteCollectif: '',
-    familleComptabilite: '',
-    
-    // Informations par défaut
-    civilite: '',
-    tel: '',
-    email: '',
-    fax: '',
-    
-    // Terminalité (anciennement dans Informations complémentaires)
-    famille: '',
-    categorieTarif: '',
-    tauxEscompte: '',
-    remise1: '',
-    tauxAcces: '',
-    remise2: '',
-    territorialite: ''
+    inscriptionRM: new Date('2025-05-14'),
+
+    // Fiche client
+    paie: true,
+    datePremierBilan: new Date(),
+    dateDebutMission: new Date(),
+    dateCulture: new Date(),
+    regimeTVA: 'Réel normal',
+    regimeIS: 'Réel normal',
+    jourTVA: new Date(),
+    typeTVA: 'Débit',
+    dateContrat: new Date(),
+    dateContratCN2C: new Date(),
+    compteFiscale: false,
+
+    // Bilan
+    regimeTVABilan: 'Réel normal',
+    regimeISBilan: 'Réel normal',
+    dateDebutBilan: new Date(),
+    dateFinBilan: new Date(),
+    dateEcheanceBilan: new Date(),
+    totaleBilan: '',
+    chiffredaffaireBilan: '',
+    resultatBilan: '',
+
+    // Organismes
+    organisme: {
+      nom: 'Impôt',
+      siteWeb: '',
+      login: '',
+      motDePasse: '',
+      commentaire: ''
+    }
   });
+
+  // Liste des organismes enregistrés
+  const [organismes, setOrganismes] = useState([]);
+  const [showOrganismesList, setShowOrganismesList] = useState(false);
+  
+  // Nouveaux états pour gérer l'affichage des listes bilan et fiche client
+  const [showBilanList, setShowBilanList] = useState(false);
+  const [showFicheClientList, setShowFicheClientList] = useState(false);
+  
+  // Liste des bilans et fiches client
+  const [bilans, setBilans] = useState([]);
+  const [fichesClient, setFichesClient] = useState([]);
 
   // État pour gérer les sections dépliables
   const [expandedSections, setExpandedSections] = useState({
     infoBase: true,
-    infoDefault: true,
-    infoJuridiques: false,
-    infoSiegeSocial: false,
-    contactPrincipal: false,
-    infoClientFournisseur: false,
-    comptabilite: false,
-    infoComplementaires: true
+    ficheClient: false,
+    bilan: false,
+    organismes: false
   });
+
+  // Options pour les champs select
+  const optionsRegimeTVA = ['Réel normal', 'Réel simplifié', 'Franchise en base'];
+  const optionsRegimeIS = ['Réel normal', 'Réel simplifié', 'Micro-BIC', 'Micro-BNC'];
+  const optionsTypeTVA = ['Débit', 'Encaissement'];
+  const optionsOrganismes = ['Impôt', 'URSSAF', 'Net-entreprises'];
 
   // Fonction pour basculer l'état d'une section
   const toggleSection = (section) => {
@@ -97,11 +90,22 @@ const ClientForm = ({ onSave, onCancel }) => {
 
   // Fonction pour gérer les changements dans les champs du formulaire
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value, type, checked } = e.target;
+    if (name.startsWith('organisme.')) {
+      const organismeField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        organisme: {
+          ...prev.organisme,
+          [organismeField]: type === 'checkbox' ? checked : value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   // Fonction pour gérer les changements de date
@@ -129,6 +133,79 @@ const ClientForm = ({ onSave, onCancel }) => {
     } else {
       console.log("Formulaire annulé");
     }
+  };
+
+  // Fonction pour ajouter un organisme à la liste
+  const handleAddOrganisme = () => {
+    setOrganismes(prev => [...prev, { ...formData.organisme, id: Date.now() }]);
+    setFormData(prev => ({
+      ...prev,
+      organisme: {
+        nom: 'Impôt',
+        siteWeb: '',
+        login: '',
+        motDePasse: '',
+        commentaire: ''
+      }
+    }));
+  };
+
+  // Fonction pour basculer l'affichage de la liste des organismes
+  const toggleOrganismesList = () => {
+    setShowOrganismesList(prev => !prev);
+  };
+  
+  // Fonction pour basculer l'affichage de la liste des bilans
+  const toggleBilanList = () => {
+    setShowBilanList(prev => !prev);
+  };
+  
+  // Fonction pour basculer l'affichage de la liste des fiches client
+  const toggleFicheClientList = () => {
+    setShowFicheClientList(prev => !prev);
+  };
+  
+  // Fonction pour ajouter un bilan
+  const handleAddBilan = () => {
+    const newBilan = {
+      id: Date.now(),
+      regimeTVA: formData.regimeTVABilan,
+      regimeIS: formData.regimeISBilan,
+      dateDebut: formData.dateDebutBilan,
+      dateFin: formData.dateFinBilan,
+      dateEcheance: formData.dateEcheanceBilan,
+      totale: formData.totaleBilan,
+      catit: formData.catitBilan,
+      resultat: formData.resultatBilan
+    };
+    setBilans(prev => [...prev, newBilan]);
+  };
+  
+  // Fonction pour ajouter une fiche client
+  const handleAddFicheClient = () => {
+    const newFicheClient = {
+      id: Date.now(),
+      paie: formData.paie,
+      datePremierBilan: formData.datePremierBilan,
+      dateDebutMission: formData.dateDebutMission,
+      dateCulture: formData.dateCulture,
+      regimeTVA: formData.regimeTVA,
+      regimeIS: formData.regimeIS,
+      jourTVA: formData.jourTVA,
+      typeTVA: formData.typeTVA,
+      dateContrat: formData.dateContrat,
+      dateContratCN2C: formData.dateContratCN2C,
+      compteFiscale: formData.compteFiscale
+    };
+    setFichesClient(prev => [...prev, newFicheClient]);
+  };
+
+  // Fonction pour basculer les valeurs booléennes
+  const toggleBooleanField = (fieldName, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: value
+    }));
   };
 
   return (
@@ -175,11 +252,32 @@ const ClientForm = ({ onSave, onCancel }) => {
                         />
                       </div>
                       <div className="form-group">
+                        <label>Nom commercial</label>
+                        <input
+                          type="text" 
+                          name="nomCommercial" 
+                          value={formData.nomCommercial}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="form-row">
+                      <div className="form-group">
                         <label>Numéro RCS</label>
                         <input 
                           type="text" 
                           name="numeroRCS" 
                           value={formData.numeroRCS}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Siret</label>
+                        <input 
+                          type="text" 
+                          name="siret" 
+                          value={formData.siret}
                           onChange={handleChange}
                         />
                       </div>
@@ -217,11 +315,32 @@ const ClientForm = ({ onSave, onCancel }) => {
                         />
                       </div>
                       <div className="form-group">
+                        <label>Manager</label>
+                        <input 
+                          type="text" 
+                          name="manager" 
+                          value={formData.manager}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="form-row">
+                      <div className="form-group">
                         <label>Adresse Siège</label>
                         <input 
                           type="text" 
                           name="adresseSiege" 
                           value={formData.adresseSiege}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Capitale social</label>
+                        <input 
+                          type="text" 
+                          name="capitaleSocial" 
+                          value={formData.capitaleSocial}
                           onChange={handleChange}
                         />
                       </div>
@@ -238,268 +357,10 @@ const ClientForm = ({ onSave, onCancel }) => {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Siret</label>
-                        <input 
-                          type="text" 
-                          name="siret" 
-                          value={formData.siret}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Capitale social</label>
-                        <input 
-                          type="text" 
-                          name="capitaleSocial" 
-                          value={formData.capitaleSocial}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
                         <label>Inscription au RM</label>
-                        <input 
-                          type="text" 
-                          name="inscriptionRM" 
-                          value={formData.inscriptionRM}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Section Information par défaut */}
-              <div className="section-container">
-                <div 
-                  className="section-header" 
-                  onClick={() => toggleSection('infoDefault')}
-                >
-                  {expandedSections.infoDefault ? <FaChevronDown /> : <FaChevronRight />}
-                  <span>Information par défaut</span>
-                  <div className="section-actions">
-                    <FaStar className="action-icon" />
-                    <FaLock className="action-icon" />
-                    <FaCog className="action-icon" />
-                  </div>
-                </div>
-                
-                {expandedSections.infoDefault && (
-                  <div className="section-content">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Civilité</label>
-                        <input 
-                          type="text" 
-                          name="civilite" 
-                          value={formData.civilite}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Email</label>
-                        <input 
-                          type="email" 
-                          name="email" 
-                          value={formData.email}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Tél fixe</label>
-                        <input 
-                          type="text" 
-                          name="tel" 
-                          value={formData.tel}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Fax</label>
-                        <input 
-                          type="text" 
-                          name="fax" 
-                          value={formData.fax}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Section Information complémentaires */}
-              <div className="section-container">
-                <div 
-                  className="section-header" 
-                  onClick={() => toggleSection('infoComplementaires')}
-                >
-                  {expandedSections.infoComplementaires ? <FaChevronDown /> : <FaChevronRight />}
-                  <span>Information complémentaires</span>
-                  <div className="section-actions">
-                    <FaStar className="action-icon" />
-                    <FaLock className="action-icon" />
-                    <FaCog className="action-icon" />
-                  </div>
-                </div>
-                
-                {expandedSections.infoComplementaires && (
-                  <div className="section-content">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Famille</label>
-                        <input 
-                          type="text" 
-                          name="famille" 
-                          value={formData.famille}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Territorialité</label>
-                        <input 
-                          type="text" 
-                          name="territorialite" 
-                          value={formData.territorialite}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Catégorie tarif</label>
-                        <input 
-                          type="text" 
-                          name="categorieTarif" 
-                          value={formData.categorieTarif}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Taux d'escompte</label>
-                        <input 
-                          type="text" 
-                          name="tauxEscompte" 
-                          value={formData.tauxEscompte}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Remise 1</label>
-                        <input 
-                          type="text" 
-                          name="remise1" 
-                          value={formData.remise1}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Taux d'accès</label>
-                        <input 
-                          type="text" 
-                          name="tauxAcces" 
-                          value={formData.tauxAcces}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Remise 2</label>
-                        <input 
-                          type="text" 
-                          name="remise2" 
-                          value={formData.remise2}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Colonne droite */}
-            <div className="column">
-              {/* Section Informations juridiques */}
-              <div className="section-container">
-                <div 
-                  className="section-header" 
-                  onClick={() => toggleSection('infoJuridiques')}
-                >
-                  {expandedSections.infoJuridiques ? <FaChevronDown /> : <FaChevronRight />}
-                  <span>Informations juridiques</span>
-                  <div className="section-actions">
-                    <FaStar className="action-icon" />
-                    <FaLock className="action-icon" />
-                    <FaCog className="action-icon" />
-                  </div>
-                </div>
-                
-                {expandedSections.infoJuridiques && (
-                  <div className="section-content">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Siren</label>
-                        <div className="input-with-search">
-                          <input 
-                            type="text" 
-                            name="siren" 
-                            value={formData.siren}
-                            onChange={handleChange}
-                          />
-                          <button type="button" className="search-button">🔍</button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Dénomination</label>
-                        <input 
-                          type="text" 
-                          name="denomination" 
-                          value={formData.denomination}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Pays</label>
-                        <input 
-                          type="text" 
-                          name="pays" 
-                          value={formData.pays}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Dirigeant</label>
-                        <input 
-                          type="text" 
-                          name="dirigeant" 
-                          value={formData.dirigeant}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Date de création</label>
                         <DatePicker
-                          selected={formData.dateCreationJuridique}
-                          onChange={(date) => handleDateChange(date, 'dateCreationJuridique')}
+                          selected={formData.inscriptionRM}
+                          onChange={(date) => handleDateChange(date, 'inscriptionRM')}
                           dateFormat="dd-MM-yyyy"
                           className="datepicker-input"
                         />
@@ -509,14 +370,14 @@ const ClientForm = ({ onSave, onCancel }) => {
                 )}
               </div>
               
-              {/* Section Informations sur le siège social */}
+              {/* Section Fiche client */}
               <div className="section-container">
                 <div 
                   className="section-header" 
-                  onClick={() => toggleSection('infoSiegeSocial')}
+                  onClick={() => toggleSection('ficheClient')}
                 >
-                  {expandedSections.infoSiegeSocial ? <FaChevronDown /> : <FaChevronRight />}
-                  <span>Informations sur le siège social</span>
+                  {expandedSections.ficheClient ? <FaChevronDown /> : <FaChevronRight />}
+                  <span>Fiche client</span>
                   <div className="section-actions">
                     <FaStar className="action-icon" />
                     <FaLock className="action-icon" />
@@ -524,82 +385,380 @@ const ClientForm = ({ onSave, onCancel }) => {
                   </div>
                 </div>
                 
-                {expandedSections.infoSiegeSocial && (
+                {expandedSections.ficheClient && (
                   <div className="section-content">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Siret</label>
-                        <input 
-                          type="text" 
-                          name="siretSiege" 
-                          value={formData.siretSiege}
-                          onChange={handleChange}
-                        />
+                    {!showFicheClientList ? (
+                      <>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Paie</label>
+                            <div className="radio-boolean">
+                              <label className={`radio-button ${formData.paie === true ? 'selected' : ''}`}>
+                                <input
+                                  type="radio"
+                                  name="paie"
+                                  value="true"
+                                  checked={formData.paie === true}
+                                  onChange={() => toggleBooleanField('paie', true)}
+                                />
+                                Oui
+                              </label>
+                              <label className={`radio-button ${formData.paie === false ? 'selected' : ''}`}>
+                                <input
+                                  type="radio"
+                                  name="paie"
+                                  value="false"
+                                  checked={formData.paie === false}
+                                  onChange={() => toggleBooleanField('paie', false)}
+                                />
+                                Non
+                              </label>
+                            </div>
+                          </div>
+                          <div className="form-group">
+                            <label>Date de 1er bilan</label>
+                            <DatePicker
+                              selected={formData.datePremierBilan}
+                              onChange={(date) => handleDateChange(date, 'datePremierBilan')}
+                              dateFormat="dd-MM-yyyy"
+                              className="datepicker-input"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Date début de mission</label>
+                            <DatePicker
+                              selected={formData.dateDebutMission}
+                              onChange={(date) => handleDateChange(date, 'dateDebutMission')}
+                              dateFormat="dd-MM-yyyy"
+                              className="datepicker-input"
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Date de culture</label>
+                            <DatePicker
+                              selected={formData.dateCulture}
+                              onChange={(date) => handleDateChange(date, 'dateCulture')}
+                              dateFormat="dd-MM-yyyy"
+                              className="datepicker-input"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Régime TVA</label>
+                            <select 
+                              name="regimeTVA" 
+                              value={formData.regimeTVA}
+                              onChange={handleChange}
+                            >
+                              {optionsRegimeTVA.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Régime IS</label>
+                            <select 
+                              name="regimeIS" 
+                              value={formData.regimeIS}
+                              onChange={handleChange}
+                            >
+                              {optionsRegimeIS.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Jour de TVA</label>
+                            <DatePicker
+                              selected={formData.jourTVA}
+                              onChange={(date) => handleDateChange(date, 'jourTVA')}
+                              dateFormat="dd-MM"
+                              className="datepicker-input"
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Type de TVA</label>
+                            <select 
+                              name="typeTVA" 
+                              value={formData.typeTVA}
+                              onChange={handleChange}
+                            >
+                              {optionsTypeTVA.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Date de contrat</label>
+                            <DatePicker
+                              selected={formData.dateContrat}
+                              onChange={(date) => handleDateChange(date, 'dateContrat')}
+                              dateFormat="dd-MM-yyyy"
+                              className="datepicker-input"
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Date de contrat CN2C</label>
+                            <DatePicker
+                              selected={formData.dateContratCN2C}
+                              onChange={(date) => handleDateChange(date, 'dateContratCN2C')}
+                              dateFormat="dd-MM-yyyy"
+                              className="datepicker-input"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-group">
+                          <label>Compte fiscale</label>
+                          <div className="radio-boolean">
+                            <label className={`radio-button ${formData.compteFiscale === true ? 'selected' : ''}`}>
+                              <input 
+                                type="radio" 
+                                name="compteFiscale" 
+                                value="true" 
+                                checked={formData.compteFiscale === true}
+                                onChange={() => toggleBooleanField('compteFiscale', true)}
+                              />
+                              Oui
+                            </label>
+                            <label className={`radio-button ${formData.compteFiscale === false ? 'selected' : ''}`}>
+                              <input 
+                                type="radio" 
+                                name="compteFiscale" 
+                                value="false" 
+                                checked={formData.compteFiscale === false}
+                                onChange={() => toggleBooleanField('compteFiscale', false)}
+                              />
+                              Non
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="form-actions">
+                          <button type="button" className="btn-save" onClick={handleAddFicheClient}>
+                            <FaSave /> Enregistrer
+                          </button>
+                          <button type="button" className="btn-view" onClick={toggleFicheClientList}>
+                            <FaEye /> Voir la liste
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="fiches-client-list">
+                        <h3>Liste des fiches client</h3>
+                        {fichesClient.length === 0 ? (
+                          <p>Aucune fiche client enregistrée.</p>
+                        ) : (
+                          <table className="table">
+                            <thead>
+                              <tr>
+                                <th>Paie</th>
+                                <th>Régime TVA</th>
+                                <th>Régime IS</th>
+                                <th>Type TVA</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {fichesClient.map((fiche) => (
+                                <tr key={fiche.id}>
+                                  <td>{fiche.paie ? 'Oui' : 'Non'}</td>
+                                  <td>{fiche.regimeTVA}</td>
+                                  <td>{fiche.regimeIS}</td>
+                                  <td>{fiche.typeTVA}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                        <button type="button" className="btn-back" onClick={toggleFicheClientList}>
+                          Retour au formulaire
+                        </button>
                       </div>
-                      <div className="form-group">
-                        <label>Adresse</label>
-                        <input 
-                          type="text" 
-                          name="adresseSiegeSocial" 
-                          value={formData.adresseSiegeSocial}
-                          onChange={handleChange}
-                        />
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Colonne droite */}
+            <div className="column">
+              {/* Section Bilan */}
+              <div className="section-container">
+                <div 
+                  className="section-header" 
+                  onClick={() => toggleSection('bilan')}
+                >
+                  {expandedSections.bilan ? <FaChevronDown /> : <FaChevronRight />}
+                  <span>Bilan</span>
+                  <div className="section-actions">
+                    <FaStar className="action-icon" />
+                    <FaLock className="action-icon" />
+                    <FaCog className="action-icon" />
+                  </div>
+                </div>
+                
+                {expandedSections.bilan && (
+                  <div className="section-content">
+                    {!showBilanList ? (
+                      <>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Régime TVA</label>
+                            <select 
+                              name="regimeTVABilan" 
+                              value={formData.regimeTVABilan}
+                              onChange={handleChange}
+                            >
+                              {optionsRegimeTVA.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Régime IS</label>
+                            <select 
+                              name="regimeISBilan" 
+                              value={formData.regimeISBilan}
+                              onChange={handleChange}
+                            >
+                              {optionsRegimeIS.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Date de début</label>
+                            <DatePicker
+                              selected={formData.dateDebutBilan}
+                              onChange={(date) => handleDateChange(date, 'dateDebutBilan')}
+                              dateFormat="dd-MM-yyyy"
+                              className="datepicker-input"
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Date de fin</label>
+                            <DatePicker
+                              selected={formData.dateFinBilan}
+                              onChange={(date) => handleDateChange(date, 'dateFinBilan')}
+                              dateFormat="dd-MM-yyyy"
+                              className="datepicker-input"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Date d'échéance</label>
+                            <DatePicker
+                              selected={formData.dateEcheanceBilan}
+                              onChange={(date) => handleDateChange(date, 'dateEcheanceBilan')}
+                              dateFormat="dd-MM-yyyy"
+                              className="datepicker-input"
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Totale bilan</label>
+                            <input 
+                              type="text" 
+                              name="totaleBilan" 
+                              value={formData.totaleBilan}
+                              onChange={handleChange}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>chiffre d'affaire Bilan </label>
+                            <input 
+                              type="text" 
+                              name="catitBilan" 
+                              value={formData.catitBilan}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Résultat</label>
+                            <input 
+                              type="text" 
+                              name="resultatBilan" 
+                              value={formData.resultatBilan}
+                              onChange={handleChange}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-actions">
+                          <button type="button" className="btn-save" onClick={handleAddBilan}>
+                            <FaSave /> Enregistrer
+                          </button>
+                          <button type="button" className="btn-view" onClick={toggleBilanList}>
+                            <FaEye /> Voir la liste
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="bilans-list">
+                        <h3>Liste des bilans</h3>
+                        {bilans.length === 0 ? (
+                          <p>Aucun bilan enregistré.</p>
+                        ) : (
+                          <table className="table">
+                            <thead>
+                              <tr>
+                                <th>Date de début</th>
+                                <th>Date de fin</th>
+                                <th>Régime TVA</th>
+                                <th>Régime IS</th>
+                                <th>Totale</th>
+                                <th>Résultat</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {bilans.map((bilan) => (
+                                <tr key={bilan.id}>
+                                  <td>{bilan.dateDebut?.toLocaleDateString()}</td>
+                                  <td>{bilan.dateFin?.toLocaleDateString()}</td>
+                                  <td>{bilan.regimeTVA}</td>
+                                  <td>{bilan.regimeIS}</td>
+                                  <td>{bilan.totale}</td>
+                                  <td>{bilan.resultat}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                        <button type="button" className="btn-back" onClick={toggleBilanList}>
+                          Retour au formulaire
+                        </button>
                       </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Code postal</label>
-                        <input 
-                          type="text" 
-                          name="codePostal" 
-                          value={formData.codePostal}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Ville</label>
-                        <input 
-                          type="text" 
-                          name="ville" 
-                          value={formData.ville}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Email</label>
-                        <input 
-                          type="email" 
-                          name="emailSiege" 
-                          value={formData.emailSiege}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Tél fixe</label>
-                        <input 
-                          type="text" 
-                          name="telFixeSiege" 
-                          value={formData.telFixeSiege}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
               
-              {/* Section Contact principal */}
+              {/* Section Organismes */}
               <div className="section-container">
                 <div 
                   className="section-header" 
-                  onClick={() => toggleSection('contactPrincipal')}
+                  onClick={() => toggleSection('organismes')}
                 >
-                  {expandedSections.contactPrincipal ? <FaChevronDown /> : <FaChevronRight />}
-                  <span>Contact principal</span>
+                  {expandedSections.organismes ? <FaChevronDown /> : <FaChevronRight />}
+                  <span>Organismes</span>
                   <div className="section-actions">
                     <FaStar className="action-icon" />
                     <FaLock className="action-icon" />
@@ -607,191 +766,114 @@ const ClientForm = ({ onSave, onCancel }) => {
                   </div>
                 </div>
                 
-                {expandedSections.contactPrincipal && (
+                {expandedSections.organismes && (
                   <div className="section-content">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Nom</label>
-                        <input 
-                          type="text" 
-                          name="nomContactPrincipal" 
-                          value={formData.nomContactPrincipal}
-                          onChange={handleChange}
-                        />
+                    {!showOrganismesList ? (
+                      <>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Nom</label>
+                            <select 
+                              name="organisme.nom" 
+                              value={formData.organisme.nom}
+                              onChange={handleChange}
+                            >
+                              {optionsOrganismes.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="form-group">
+                            <label>Site web</label>
+                            <input 
+                              type="text" 
+                              name="organisme.siteWeb" 
+                              value={formData.organisme.siteWeb}
+                              onChange={handleChange}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Login</label>
+                            <input 
+                              type="text" 
+                              name="organisme.login" 
+                              value={formData.organisme.login}
+                              onChange={handleChange}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Mot de passe</label>
+                            <input 
+                              type="password" 
+                              name="organisme.motDePasse" 
+                              value={formData.organisme.motDePasse}
+                              onChange={handleChange}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-row">
+                          <div className="form-group full-width">
+                            <label>Commentaire</label>
+                            <textarea 
+                              name="organisme.commentaire" 
+                              value={formData.organisme.commentaire}
+                              onChange={handleChange}
+                              rows="3"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="form-actions">
+                          <button type="button" className="btn-save" onClick={handleAddOrganisme}>
+                            <FaSave /> Enregistrer
+                          </button>
+                          <button type="button" className="btn-view" onClick={toggleOrganismesList}>
+                            <FaEye /> Voir la liste
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="organismes-list">
+                        <h3>Liste des organismes</h3>
+                        {organismes.length === 0 ? (
+                          <p>Aucun organisme enregistré.</p>
+                        ) : (
+                          <table className="table">
+                            <thead>
+                              <tr>
+                                <th>Nom</th>
+                                <th>Site web</th>
+                                <th>Login</th>
+                                <th>Commentaire</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {organismes.map((org) => (
+                                <tr key={org.id}>
+                                  <td>{org.nom}</td>
+                                  <td>{org.siteWeb}</td>
+                                  <td>{org.login}</td>
+                                  <td>{org.commentaire}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                        <button type="button" className="btn-back" onClick={toggleOrganismesList}>
+                          Retour au formulaire
+                        </button>
                       </div>
-                      <div className="form-group">
-                        <label>Prénom</label>
-                        <input 
-                          type="text" 
-                          name="prenomContactPrincipal" 
-                          value={formData.prenomContactPrincipal}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Fonction</label>
-                        <input 
-                          type="text" 
-                          name="fonctionContactPrincipal" 
-                          value={formData.fonctionContactPrincipal}
-                          onChange={handleChange}
-                        />
-                      </div>
-                       <div className="form-group">
-                        <label>Email</label>
-                        <input 
-                          type="email" 
-                          name="emailContactPrincipal" 
-                          value={formData.emailContactPrincipal}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Mobile</label>
-                        <input 
-                          type="text" 
-                          name="mobileContactPrincipal" 
-                          value={formData.mobileContactPrincipal}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Tél fixe</label>
-                        <input 
-                          type="text" 
-                          name="telFixeContactPrincipal" 
-                          value={formData.telFixeContactPrincipal}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Section Informations client/fournisseur */}
-              <div className="section-container">
-                <div 
-                  className="section-header" 
-                  onClick={() => toggleSection('infoClientFournisseur')}
-                >
-                  {expandedSections.infoClientFournisseur ? <FaChevronDown /> : <FaChevronRight />}
-                  <span>Informations client/fournisseur</span>
-                  <div className="section-actions">
-                    <FaStar className="action-icon" />
-                    <FaLock className="action-icon" />
-                    <FaCog className="action-icon" />
-                  </div>
-                </div>
-                
-                {expandedSections.infoClientFournisseur && (
-                  <div className="section-content">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Code</label>
-                        <input 
-                          type="text" 
-                          name="code" 
-                          value={formData.code}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Famille</label>
-                        <input 
-                          type="text" 
-                          name="familleClient" 
-                          value={formData.familleClient}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Sous-famille</label>
-                        <input 
-                          type="text" 
-                          name="sousFamille" 
-                          value={formData.sousFamille}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Section Comptabilité */}
-              <div className="section-container">
-                <div 
-                  className="section-header" 
-                  onClick={() => toggleSection('comptabilite')}
-                >
-                  {expandedSections.comptabilite ? <FaChevronDown /> : <FaChevronRight />}
-                  <span>Comptabilité</span>
-                  <div className="section-actions">
-                    <FaStar className="action-icon" />
-                    <FaLock className="action-icon" />
-                    <FaCog className="action-icon" />
-                  </div>
-                </div>
-                
-                {expandedSections.comptabilite && (
-                  <div className="section-content">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Compte Comptable</label>
-                        <input 
-                          type="text" 
-                          name="compteComptable" 
-                          value={formData.compteComptable}
-                          onChange={handleChange}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Compte Collectif</label>
-                        <input 
-                          type="text" 
-                          name="compteCollectif" 
-                          value={formData.compteCollectif}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Famille</label>
-                        <input 
-                          type="text" 
-                          name="familleComptabilite" 
-                          value={formData.familleComptabilite}
-                          onChange={handleChange}
-                        />
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
           </div>
-
-          {/* Barre des boutons pour enregistrer/annuler */}
-          <div className="form-actions">
-            <button type="submit" className="save-button">
-              <FaSave /> Enregistrer
-            </button>
-            <button type="button" className="cancel-button" onClick={handleCancel}>
-              <FaTimes /> Annuler
-            </button>
-          </div>
+          
         </form>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import '../styles/AdminDashboard.css';
 import '../styles/Userform.css';
 import CreateUserForm from '../components/CreateUserForm';
@@ -10,6 +10,7 @@ import ProspectForm from '../components/ProspectForm';
 import CreateTicketForm from '../components/CreateTicketForm';
 import TicketList from '../components/TicketList';
 import ClientForm from '../components/ClientForm';
+import TicketEvolutionForecastChart from '../components/TicketEvolutionForecastChart'; // Import the new chart component
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -25,7 +26,7 @@ const AdminDashboard = () => {
     clients: 0,
     prospects: 0
   });
-  const [ticketEvolutionData, setTicketEvolutionData] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const [ticketPriorityData, setTicketPriorityData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,22 +43,21 @@ const AdminDashboard = () => {
     critique: '#7d3c98'   // violet
   };
 
-useEffect(() => {
-  const fetchStats = () => {
-    // logique pour récupérer les stats ici
-  };
-  fetchStats();
-  if (location.state && location.state.activeSection) {
-    setActiveSection(location.state.activeSection);
-  }
-}, [location]);
-
+  useEffect(() => {
+    const fetchStats = () => {
+      fetchAllStats();
+    };
+    fetchStats();
+    if (location.state && location.state.activeSection) {
+      setActiveSection(location.state.activeSection);
+    }
+  }, [location]);
 
   useEffect(() => {
     fetchClients();
   }, []);
 
-  const fetchStats = async () => {
+  const fetchAllStats = async () => {
     setLoading(true);
     setError(null);
     
@@ -75,13 +75,12 @@ useEffect(() => {
       const ticketsData = results[3].status === 'fulfilled' ? results[3].value.data : [];
       
       updateStats(prospectsData, clientsData, usersData, ticketsData);
-      generateTicketEvolutionData(ticketsData);
       generateTicketPriorityData(ticketsData);
+      setTickets(ticketsData);
       
     } catch (err) {
       console.error('Erreur lors du chargement des statistiques:', err);
       setError('Erreur lors du chargement des statistiques. Veuillez réessayer.');
-      setTicketEvolutionData([]);
       setTicketPriorityData([]);
     } finally {
       setLoading(false);
@@ -148,93 +147,48 @@ useEffect(() => {
     }
   };
 
-  const generateTicketEvolutionData = (tickets) => {
+  const generateTicketPriorityData = (tickets) => {
     if (!Array.isArray(tickets) || tickets.length === 0) {
-      setTicketEvolutionData([]);
+      setTicketPriorityData([]);
       return;
     }
     
-    const now = new Date();
-    const tenDaysAgo = new Date(now);
-    tenDaysAgo.setDate(now.getDate() - 9);
-    
-    const days = [];
-    const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-    
-    for (let i = 0; i < 10; i++) {
-      const date = new Date(tenDaysAgo);
-      date.setDate(tenDaysAgo.getDate() + i);
-      
-      days.push({
-        date: new Date(date),
-        formattedDate: date.toISOString().split('T')[0],
-        day: dayNames[date.getDay()],
-        tickets: 0
-      });
-    }
+    // Comptage des tickets par priorité
+    const priorityCounts = {
+      faible: 0,
+      moyenne: 0,
+      élevée: 0, 
+      critique: 0
+    };
     
     tickets.forEach(ticket => {
-      if (!ticket.createdAt) return;
-      
-      const ticketDate = new Date(ticket.createdAt);
-      const formattedTicketDate = ticketDate.toISOString().split('T')[0];
-      
-      const dayEntry = days.find(day => day.formattedDate === formattedTicketDate);
-      if (dayEntry) {
-        dayEntry.tickets++;
+      if (ticket.priority) {
+        // Normaliser la priorité pour gérer les variations d'orthographe
+        let priority = ticket.priority.toLowerCase();
+        
+        // Remplacer toutes les variantes de "elevee" par "élevée"
+        if (priority === 'elevee' || priority === 'elevée' || priority === 'élevee') {
+          priority = 'élevée';
+        }
+        
+        if (priorityCounts.hasOwnProperty(priority)) {
+          priorityCounts[priority]++;
+        }
       }
     });
     
-    const chartData = days.map(day => ({
-      day: `${day.day} ${day.date.getDate()}/${day.date.getMonth() + 1}`,
-      tickets: day.tickets
+    // Conversion en format adapté pour le PieChart
+    const data = Object.keys(priorityCounts).map(priority => ({
+      name: priority.charAt(0).toUpperCase() + priority.slice(1), // Première lettre en majuscule
+      value: priorityCounts[priority],
+      color: PRIORITY_COLORS[priority]
     }));
     
-    setTicketEvolutionData(chartData);
+    // Optionnel: filtrer les entrées avec valeur 0
+    const filteredData = data.filter(item => item.value > 0);
+    
+    setTicketPriorityData(filteredData);
   };
-
- const generateTicketPriorityData = (tickets) => {
-  if (!Array.isArray(tickets) || tickets.length === 0) {
-    setTicketPriorityData([]);
-    return;
-  }
-  
-  // Comptage des tickets par priorité
-  const priorityCounts = {
-    faible: 0,
-    moyenne: 0,
-    élevée: 0, 
-    critique: 0
-  };
-  
-  tickets.forEach(ticket => {
-    if (ticket.priority) {
-      // Normaliser la priorité pour gérer les variations d'orthographe
-      let priority = ticket.priority.toLowerCase();
-      
-      // Remplacer toutes les variantes de "elevee" par "élevée"
-      if (priority === 'elevee' || priority === 'elevée' || priority === 'élevee') {
-        priority = 'élevée';
-      }
-      
-      if (priorityCounts.hasOwnProperty(priority)) {
-        priorityCounts[priority]++;
-      }
-    }
-  });
-  
-  // Conversion en format adapté pour le PieChart
-  const data = Object.keys(priorityCounts).map(priority => ({
-    name: priority.charAt(0).toUpperCase() + priority.slice(1), // Première lettre en majuscule
-    value: priorityCounts[priority],
-    color: PRIORITY_COLORS[priority]
-  }));
-  
-  // Optionnel: filtrer les entrées avec valeur 0
-  const filteredData = data.filter(item => item.value > 0);
-  
-  setTicketPriorityData(filteredData);
-};
 
   const handleEditUser = (id) => {
     navigate(`/admin/edit-user/${id}`);
@@ -243,16 +197,16 @@ useEffect(() => {
   const handleUserUpdated = () => {
     setActiveSection('users');
     navigate('/admin/dashboard', { state: { activeSection: 'users' } });
-    fetchStats();
+    fetchAllStats();
   };
 
   const handleProspectUpdated = () => {
-    fetchStats();
+    fetchAllStats();
     setActiveSection('prospects');
   };
 
   const handleTicketUpdated = () => {
-    fetchStats();
+    fetchAllStats();
   };
 
   const StatCard = ({ title, value, className = '' }) => (
@@ -266,34 +220,6 @@ useEffect(() => {
     <div className={`ticket-stat-card ${status}`}>
       <h3>{title}</h3>
       <p className="ticket-stat-value">{value}</p>
-    </div>
-  );
-
-  const TicketEvolutionChart = () => (
-    <div className="ticket-evolution-graph" style={{ width: '100%', height: 250 }}>
-      {ticketEvolutionData.length > 0 ? (
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart 
-            data={ticketEvolutionData} 
-            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="day" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Line 
-              type="monotone" 
-              dataKey="tickets" 
-              stroke="#3498db" 
-              strokeWidth={2}
-              dot={{ r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      ) : (
-        <div className="no-data">Aucune donnée disponible</div>
-      )}
     </div>
   );
 
@@ -354,7 +280,10 @@ useEffect(() => {
             <div className="charts-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
               <div className="chart-card" style={{ flex: '1 1 450px' }}>
                 <h3>Évolution des tickets</h3>
-                <TicketEvolutionChart />
+                <TicketEvolutionForecastChart 
+                  tickets={tickets} 
+                  fetchUrl={`${API_URL}/tickets`} 
+                />
               </div>
               
               <div className="chart-card" style={{ flex: '1 1 450px' }}>
@@ -428,7 +357,7 @@ useEffect(() => {
   };
 
   const refreshData = () => {
-    fetchStats();
+    fetchAllStats();
     if (activeSection === 'clients') {
       fetchClients();
     }
@@ -464,7 +393,7 @@ useEffect(() => {
               className={activeSection === 'tickets' ? 'active' : ''} 
               onClick={() => {
                 setActiveSection('tickets');
-                fetchStats();
+                fetchAllStats();
               }}
             >
               Tickets
@@ -479,16 +408,16 @@ useEffect(() => {
               className={activeSection === 'clients' ? 'active' : ''} 
               onClick={() => {
                 setActiveSection('clients');
-                fetchStats();
+                fetchAllStats();
               }}
             >
               Fiches Clients
-            </li>
+              </li>
             <li 
               className={activeSection === 'prospects' ? 'active' : ''} 
               onClick={() => {
                 setActiveSection('prospects');
-                fetchStats();
+                fetchAllStats();
               }}
             >
               Prospects
