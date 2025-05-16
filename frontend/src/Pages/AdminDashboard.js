@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FaPlus, FaUser } from 'react-icons/fa';
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import '../styles/AdminDashboard.css';
@@ -10,7 +11,8 @@ import ProspectForm from '../components/ProspectForm';
 import CreateTicketForm from '../components/CreateTicketForm';
 import TicketList from '../components/TicketList';
 import ClientForm from '../components/ClientForm';
-import TicketEvolutionForecastChart from '../components/TicketEvolutionForecastChart'; // Import the new chart component
+import ClientList from '../components/ClientList'; // Importez le composant ClientList
+import TicketEvolutionForecastChart from '../components/TicketEvolutionForecastChart';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -31,7 +33,9 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [clients, setClients] = useState([]);
-  
+  const [selectedClientId, setSelectedClientId] = useState(null);
+  const [isCreatingClient, setIsCreatingClient] = useState(false);  
+
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -54,9 +58,16 @@ const AdminDashboard = () => {
   }, [location]);
 
   useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    navigate('/login');
+  }
+}, [navigate]);
+
+  useEffect(() => {
     fetchClients();
   }, []);
-
+console.log('Token:', localStorage.getItem('token'));
   const fetchAllStats = async () => {
     setLoading(true);
     setError(null);
@@ -132,20 +143,34 @@ const AdminDashboard = () => {
   };
 
   const fetchClients = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await axios.get(`${API_URL}/clients`);
-      setClients(response.data);
-    } catch (err) {
-      console.error('Erreur lors du chargement des clients:', err);
-      setError('Erreur lors du chargement des clients. Veuillez réessayer.');
-      setClients([]);
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  setError(null);
+  
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
     }
-  };
+
+    const response = await axios.get(`${API_URL}/clients`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    setClients(response.data);
+  } catch (err) {
+    console.error('Erreur lors du chargement des clients:', err);
+    if (err.response?.status === 401) {
+      // Rediriger vers la page de login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    setError('Erreur lors du chargement des clients. Veuillez réessayer.');
+    setClients([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const generateTicketPriorityData = (tickets) => {
     if (!Array.isArray(tickets) || tickets.length === 0) {
@@ -205,7 +230,31 @@ const AdminDashboard = () => {
     setActiveSection('prospects');
   };
 
+  const handleSaveClient = () => {
+    fetchClients();
+    fetchAllStats();
+    setSelectedClientId(null);
+    setIsCreatingClient(false);
+  };
+
+  // Fonction pour annuler la création/édition
+  const handleCancelClient = () => {
+    setSelectedClientId(null);
+    setIsCreatingClient(false);
+  };
+
   const handleTicketUpdated = () => {
+    fetchAllStats();
+  };
+
+  const handleClientCreated = () => {
+    fetchClients();
+    fetchAllStats();
+    setIsCreatingClient(false);
+  };
+
+  const handleClientDeleted = () => {
+    fetchClients();
     fetchAllStats();
   };
 
@@ -299,14 +348,32 @@ const AdminDashboard = () => {
 
   const renderClientsSection = () => {
     return (
-      <div>
+      <div className="clients-section">
         <h2>Fiches Clients</h2>
-        {loading ? (
-          <div className="loading">Chargement des clients...</div>
-        ) : error ? (
-          <div className="error-message">{error}</div>
+        
+        {isCreatingClient || selectedClientId ? (
+          <ClientForm 
+            clientId={selectedClientId} 
+            onSave={handleSaveClient} 
+            onCancel={handleCancelClient} 
+          />
         ) : (
-          <ClientForm clients={clients} />
+          // Utiliser le composant ClientList à la place de notre affichage personnalisé
+          <div className="client-list-wrapper">
+            <div className="client-list-actions">
+              <button 
+                className="btn-primary"
+                onClick={() => setIsCreatingClient(true)}
+              >
+                <FaPlus /> Créer un nouveau client
+              </button>
+            </div>
+            
+            <ClientList 
+              onEditClient={(id) => setSelectedClientId(id)}
+              onClientDeleted={handleClientDeleted}
+            />
+          </div>
         )}
       </div>
     );

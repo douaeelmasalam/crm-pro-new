@@ -4,6 +4,7 @@ const authRoutes = require('./Routes/authRoutes');
 const userRoutes = require('./Routes/user');
 const prospectRoutes = require('./Routes/prospectRoutes');
 const ticketRoutes = require('./Routes/ticket');
+const clientRoutes = require('./Routes/clientRoutes'); // Ajout des routes client
 const errorHandler = require('./Middleware/errorHandler');
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/prospects', prospectRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/clients', clientRoutes); // Route pour les clients
 
 // Exemple de route tableau de bord
 app.get('/api/dashboard', (req, res) => {

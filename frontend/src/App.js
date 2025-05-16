@@ -6,6 +6,7 @@ import AgentDashboard from "./Pages/AgentDashboard";
 import EditUserForm from "./components/EditUserForm";
 import CreateTicketForm from "./components/CreateTicketForm";
 import ClientForm from "./components/ClientForm";
+import ClientList from "./components/ClientList";
 import Demandes from "./Pages/Demandes";
 import Taches from "./Pages/Taches";
 import Settings from "./Pages/Settings";
@@ -57,6 +58,11 @@ function App() {
         <Route path="/admin/dashboard" element={<PrivateRoute element={<AdminDashboard />} />} />
         <Route path="/admin/edit-user/:id" element={<PrivateRoute element={<EditUserForm />} />} />
         <Route path="/admin/demandes" element={<PrivateRoute element={<Demandes />} />} />
+        <Route path="/client/:id?" element={<PrivateRoute element={<ClientForm />} />} />
+        <Route path="/clients" element={<ClientList />} />
+        <Route path="/clients/create" element={<ClientForm />} />
+        <Route path="/clients/edit/:clientId" element={<ClientForm />} />
+
         
         {/* 🧑‍💼 Pages Agent */}
         <Route path="/agent/dashboard" element={<PrivateRoute element={<AgentDashboard />} />} />
