@@ -68,35 +68,49 @@ const AdminDashboard = () => {
     fetchClients();
   }, []);
 console.log('Token:', localStorage.getItem('token'));
-  const fetchAllStats = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const results = await Promise.allSettled([
-        axios.get(`${API_URL}/prospects`),
-        axios.get(`${API_URL}/clients`),
-        axios.get(`${API_URL}/users`),
-        axios.get(`${API_URL}/tickets`)
-      ]);
-      
-      const prospectsData = results[0].status === 'fulfilled' ? results[0].value.data : [];
-      const clientsData = results[1].status === 'fulfilled' ? results[1].value.data : [];
-      const usersData = results[2].status === 'fulfilled' ? results[2].value.data : [];
-      const ticketsData = results[3].status === 'fulfilled' ? results[3].value.data : [];
-      
-      updateStats(prospectsData, clientsData, usersData, ticketsData);
-      generateTicketPriorityData(ticketsData);
-      setTickets(ticketsData);
-      
-    } catch (err) {
-      console.error('Erreur lors du chargement des statistiques:', err);
-      setError('Erreur lors du chargement des statistiques. Veuillez réessayer.');
-      setTicketPriorityData([]);
-    } finally {
-      setLoading(false);
+ const fetchAllStats = async () => {
+  setLoading(true);
+  setError(null);
+  
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
     }
-  };
+
+    const headers = {
+      'Authorization': `Bearer ${token}`
+    };
+    
+    const results = await Promise.allSettled([
+      axios.get(`${API_URL}/prospects`, { headers }),
+      axios.get(`${API_URL}/clients`, { headers }),
+      axios.get(`${API_URL}/users`, { headers }),
+      axios.get(`${API_URL}/tickets`, { headers })
+    ]);
+    
+    const prospectsData = results[0].status === 'fulfilled' ? results[0].value.data : [];
+    const clientsData = results[1].status === 'fulfilled' ? results[1].value.data : [];
+    const usersData = results[2].status === 'fulfilled' ? results[2].value.data : [];
+    const ticketsData = results[3].status === 'fulfilled' ? results[3].value.data : [];
+    
+    updateStats(prospectsData, clientsData, usersData, ticketsData);
+    generateTicketPriorityData(ticketsData);
+    setTickets(ticketsData);
+    
+  } catch (err) {
+    console.error('Erreur lors du chargement des statistiques:', err);
+    if (err.response?.status === 401) {
+      // Rediriger vers la page de login si non autorisé
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    setError('Erreur lors du chargement des statistiques. Veuillez réessayer.');
+    setTicketPriorityData([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const updateStats = (prospects, clients, users, tickets) => {
     // On normalise les statuts pour compter correctement selon les nouveaux statuts
@@ -369,6 +383,7 @@ console.log('Token:', localStorage.getItem('token'));
               </button>
             </div>
             
+          
             <ClientList 
               onEditClient={(id) => setSelectedClientId(id)}
               onClientDeleted={handleClientDeleted}
@@ -390,7 +405,6 @@ console.log('Token:', localStorage.getItem('token'));
       );
       case 'createUser': return (
         <div>
-          <h2>Create User</h2>
           <CreateUserForm onUserUpdated={handleUserUpdated} />
         </div>
       );
@@ -454,7 +468,7 @@ console.log('Token:', localStorage.getItem('token'));
               className={activeSection === 'createUser' ? 'active' : ''} 
               onClick={() => setActiveSection('createUser')}
             >
-              Create/Edit User
+              Create User
             </li>
             <li 
               className={activeSection === 'tickets' ? 'active' : ''} 

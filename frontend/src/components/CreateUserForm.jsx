@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../styles/Userform.css';
 
 const CreateUserForm = () => {
   const [formData, setFormData] = useState({
@@ -6,6 +7,7 @@ const CreateUserForm = () => {
     email: '',
     password: '',
     role: 'user',
+    status: 'Actif',
   });
 
   const handleChange = (e) => {
@@ -14,15 +16,13 @@ const CreateUserForm = () => {
       ...prevState,
       [name]: value,
     }));
-  }; 
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { name, email, password, role } = formData;
+    const { name, email, password, role, status } = formData;
 
-    console.log('Mot de passe envoyé au backend (en clair) :', password);
-
-    const userData = { name, email, password, role };
+    const userData = { name, email, password, role, status };
 
     try {
       const response = await fetch('http://localhost:5000/api/users/create-user', {
@@ -34,7 +34,13 @@ const CreateUserForm = () => {
       const result = await response.json();
       if (response.ok) {
         alert('Utilisateur créé avec succès');
-        setFormData({ name: '', email: '', password: '', role: 'user' });
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          role: 'user',
+          status: 'Actif',
+        });
       } else {
         alert(result.message);
       }
@@ -44,28 +50,89 @@ const CreateUserForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="user-form">
-      <div>
-        <label>Nom :</label>
-        <input type="text" name="name" placeholder="Nom de l'utilisateur" value={formData.name} onChange={handleChange} required />
+    <div className="form-container">
+      <h2 className="form-title">Create New User</h2>
+      <div className="form-fields">
+        <div className="form-group">
+          <label className="form-label">Name:</label>
+          <input 
+            type="text" 
+            name="name" 
+            placeholder="User name" 
+            value={formData.name} 
+            onChange={handleChange} 
+            required 
+            className="form-input"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label">Email:</label>
+          <input 
+            type="email" 
+            name="email" 
+            placeholder="Email address" 
+            value={formData.email} 
+            onChange={handleChange} 
+            required 
+            className="form-input"
+          />
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label">Password:</label>
+          <input 
+            type="password" 
+            name="password" 
+            placeholder="Password" 
+            value={formData.password} 
+            onChange={handleChange} 
+            required 
+            className="form-input"
+          />
+        </div>
+        
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">Role:</label>
+            <select 
+              name="role" 
+              value={formData.role} 
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Status:</label>
+            <select 
+              name="status" 
+              value={formData.status} 
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="Actif">Actif</option>
+              <option value="Inactif">Inactif</option>
+              <option value="En attente de validation">En attente de validation</option>
+              <option value="Suspendu">Suspendu</option>
+              <option value="Supprimé">Supprimé</option>
+
+
+            </select>
+          </div>
+        </div>
+
+        <button 
+          onClick={handleSubmit}
+          className="form-button"
+        >
+          Create User
+        </button>
       </div>
-      <div>
-        <label>Email :</label>
-        <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} required />
-      </div>
-      <div>
-        <label>Mot de passe :</label>
-        <input type="password" name="password" placeholder="Mot de passe" value={formData.password} onChange={handleChange} required />
-      </div>
-      <div>
-        <label>Rôle :</label>
-        <select name="role" value={formData.role} onChange={handleChange}>
-          <option value="user">User</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
-      <button type="submit">Créer l'utilisateur</button>
-    </form>
+    </div>
   );
 };
 
