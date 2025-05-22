@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaPlus, FaUser } from 'react-icons/fa';
+import { FaPlus, FaUser, FaDownload } from 'react-icons/fa';
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import '../styles/AdminDashboard.css';
@@ -11,13 +11,16 @@ import ProspectForm from '../components/ProspectForm';
 import CreateTicketForm from '../components/CreateTicketForm';
 import TicketList from '../components/TicketList';
 import ClientForm from '../components/ClientForm';
-import ClientList from '../components/ClientList'; // Importez le composant ClientList
+import ClientList from '../components/ClientList';
 import TicketEvolutionForecastChart from '../components/TicketEvolutionForecastChart';
+import ExportDataForm from '../components/ExportDataForm';
 
 const API_URL = 'http://localhost:5000/api';
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportType, setExportType] = useState('');
   const [stats, setStats] = useState({
     users: 0,
     tickets: 0,
@@ -47,6 +50,25 @@ const AdminDashboard = () => {
     critique: '#7d3c98'   // violet
   };
 
+  // Modal component pour l'export
+  const ExportModal = ({ isOpen, onClose, exportType }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h3>Exporter les données</h3>
+            <button className="modal-close" onClick={onClose}>×</button>
+          </div>
+          <div className="modal-body">
+            <ExportDataForm exportType={exportType} />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   useEffect(() => {
     const fetchStats = () => {
       fetchAllStats();
@@ -58,62 +80,62 @@ const AdminDashboard = () => {
   }, [location]);
 
   useEffect(() => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    navigate('/login');
-  }
-}, [navigate]);
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
 
   useEffect(() => {
     fetchClients();
   }, []);
-console.log('Token:', localStorage.getItem('token'));
- const fetchAllStats = async () => {
-  setLoading(true);
-  setError(null);
-  
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
 
-    const headers = {
-      'Authorization': `Bearer ${token}`
-    };
+  console.log('Token:', localStorage.getItem('token'));
+
+  const fetchAllStats = async () => {
+    setLoading(true);
+    setError(null);
     
-    const results = await Promise.allSettled([
-      axios.get(`${API_URL}/prospects`, { headers }),
-      axios.get(`${API_URL}/clients`, { headers }),
-      axios.get(`${API_URL}/users`, { headers }),
-      axios.get(`${API_URL}/tickets`, { headers })
-    ]);
-    
-    const prospectsData = results[0].status === 'fulfilled' ? results[0].value.data : [];
-    const clientsData = results[1].status === 'fulfilled' ? results[1].value.data : [];
-    const usersData = results[2].status === 'fulfilled' ? results[2].value.data : [];
-    const ticketsData = results[3].status === 'fulfilled' ? results[3].value.data : [];
-    
-    updateStats(prospectsData, clientsData, usersData, ticketsData);
-    generateTicketPriorityData(ticketsData);
-    setTickets(ticketsData);
-    
-  } catch (err) {
-    console.error('Erreur lors du chargement des statistiques:', err);
-    if (err.response?.status === 401) {
-      // Rediriger vers la page de login si non autorisé
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const headers = {
+        'Authorization': `Bearer ${token}`
+      };
+      
+      const results = await Promise.allSettled([
+        axios.get(`${API_URL}/prospects`, { headers }),
+        axios.get(`${API_URL}/clients`, { headers }),
+        axios.get(`${API_URL}/users`, { headers }),
+        axios.get(`${API_URL}/tickets`, { headers })
+      ]);
+      
+      const prospectsData = results[0].status === 'fulfilled' ? results[0].value.data : [];
+      const clientsData = results[1].status === 'fulfilled' ? results[1].value.data : [];
+      const usersData = results[2].status === 'fulfilled' ? results[2].value.data : [];
+      const ticketsData = results[3].status === 'fulfilled' ? results[3].value.data : [];
+      
+      updateStats(prospectsData, clientsData, usersData, ticketsData);
+      generateTicketPriorityData(ticketsData);
+      setTickets(ticketsData);
+      
+    } catch (err) {
+      console.error('Erreur lors du chargement des statistiques:', err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      setError('Erreur lors du chargement des statistiques. Veuillez réessayer.');
+      setTicketPriorityData([]);
+    } finally {
+      setLoading(false);
     }
-    setError('Erreur lors du chargement des statistiques. Veuillez réessayer.');
-    setTicketPriorityData([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const updateStats = (prospects, clients, users, tickets) => {
-    // On normalise les statuts pour compter correctement selon les nouveaux statuts
     const ouvertTickets = tickets.filter(ticket => 
       ticket.status === 'ouvert' || 
       ticket.status === 'Ouvert' || 
@@ -157,34 +179,33 @@ console.log('Token:', localStorage.getItem('token'));
   };
 
   const fetchClients = async () => {
-  setLoading(true);
-  setError(null);
-  
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    const response = await axios.get(`${API_URL}/clients`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
-    });
-    setClients(response.data);
-  } catch (err) {
-    console.error('Erreur lors du chargement des clients:', err);
-    if (err.response?.status === 401) {
-      // Rediriger vers la page de login
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+
+      const response = await axios.get(`${API_URL}/clients`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setClients(response.data);
+    } catch (err) {
+      console.error('Erreur lors du chargement des clients:', err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+      setError('Erreur lors du chargement des clients. Veuillez réessayer.');
+      setClients([]);
+    } finally {
+      setLoading(false);
     }
-    setError('Erreur lors du chargement des clients. Veuillez réessayer.');
-    setClients([]);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const generateTicketPriorityData = (tickets) => {
     if (!Array.isArray(tickets) || tickets.length === 0) {
@@ -192,7 +213,6 @@ console.log('Token:', localStorage.getItem('token'));
       return;
     }
     
-    // Comptage des tickets par priorité
     const priorityCounts = {
       faible: 0,
       moyenne: 0,
@@ -202,10 +222,8 @@ console.log('Token:', localStorage.getItem('token'));
     
     tickets.forEach(ticket => {
       if (ticket.priority) {
-        // Normaliser la priorité pour gérer les variations d'orthographe
         let priority = ticket.priority.toLowerCase();
         
-        // Remplacer toutes les variantes de "elevee" par "élevée"
         if (priority === 'elevee' || priority === 'elevée' || priority === 'élevee') {
           priority = 'élevée';
         }
@@ -216,14 +234,12 @@ console.log('Token:', localStorage.getItem('token'));
       }
     });
     
-    // Conversion en format adapté pour le PieChart
     const data = Object.keys(priorityCounts).map(priority => ({
-      name: priority.charAt(0).toUpperCase() + priority.slice(1), // Première lettre en majuscule
+      name: priority.charAt(0).toUpperCase() + priority.slice(1),
       value: priorityCounts[priority],
       color: PRIORITY_COLORS[priority]
     }));
     
-    // Optionnel: filtrer les entrées avec valeur 0
     const filteredData = data.filter(item => item.value > 0);
     
     setTicketPriorityData(filteredData);
@@ -251,7 +267,6 @@ console.log('Token:', localStorage.getItem('token'));
     setIsCreatingClient(false);
   };
 
-  // Fonction pour annuler la création/édition
   const handleCancelClient = () => {
     setSelectedClientId(null);
     setIsCreatingClient(false);
@@ -270,6 +285,18 @@ console.log('Token:', localStorage.getItem('token'));
   const handleClientDeleted = () => {
     fetchClients();
     fetchAllStats();
+  };
+
+  // Fonction pour ouvrir le modal d'export
+  const handleExportClick = (type) => {
+    setExportType(type);
+    setShowExportModal(true);
+  };
+
+  // Fonction pour fermer le modal d'export
+  const handleCloseExportModal = () => {
+    setShowExportModal(false);
+    setExportType('');
   };
 
   const StatCard = ({ title, value, className = '' }) => (
@@ -319,7 +346,27 @@ console.log('Token:', localStorage.getItem('token'));
   const renderDashboard = () => {
     return (
       <div className="dashboard-content">
-        <h2>Dashboard Overview</h2>
+        <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2>Dashboard Overview</h2>
+          <button 
+            className="export-dashboard-btn"
+            onClick={() => handleExportClick('dashboard')}
+            style={{
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <FaDownload /> Exporter Dashboard
+          </button>
+        </div>
+        
         {loading ? (
           <div className="loading">Chargement des statistiques...</div>
         ) : error ? (
@@ -372,7 +419,6 @@ console.log('Token:', localStorage.getItem('token'));
             onCancel={handleCancelClient} 
           />
         ) : (
-          // Utiliser le composant ClientList à la place de notre affichage personnalisé
           <div className="client-list-wrapper">
             <div className="client-list-actions">
               <button 
@@ -383,7 +429,6 @@ console.log('Token:', localStorage.getItem('token'));
               </button>
             </div>
             
-          
             <ClientList 
               onEditClient={(id) => setSelectedClientId(id)}
               onClientDeleted={handleClientDeleted}
@@ -493,7 +538,7 @@ console.log('Token:', localStorage.getItem('token'));
               }}
             >
               Fiches Clients
-              </li>
+            </li>
             <li 
               className={activeSection === 'prospects' ? 'active' : ''} 
               onClick={() => {
@@ -527,6 +572,13 @@ console.log('Token:', localStorage.getItem('token'));
           {renderSection()}
         </main>
       </div>
+
+      {/* Modal d'export */}
+      <ExportModal 
+        isOpen={showExportModal} 
+        onClose={handleCloseExportModal} 
+        exportType={exportType} 
+      />
     </div>
   );
 };

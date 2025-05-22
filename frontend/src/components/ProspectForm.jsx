@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { FaDownload } from 'react-icons/fa';
 import '../styles/ProspectForm.css';
-import axios from 'axios'; // Assurez-vous d'installer axios: npm install axios
+import axios from 'axios';
+import ExportDataForm from './ExportDataForm';
 
 const API_URL = 'http://localhost:5000/api';
 
 const ProspectForm = ({ onProspectUpdated }) => {
   // Liste de prospects
   const [prospects, setProspects] = useState([]);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const [formData, setFormData] = useState({
     nom: '',
@@ -23,6 +26,25 @@ const ProspectForm = ({ onProspectUpdated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Modal component pour l'export
+  const ExportModal = ({ isOpen, onClose }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h3>Exporter les prospects</h3>
+            <button className="modal-close" onClick={onClose}>×</button>
+          </div>
+          <div className="modal-body">
+            <ExportDataForm exportType="prospects" />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Charger les prospects au chargement du composant
   useEffect(() => {
     fetchProspects();
@@ -32,7 +54,10 @@ const ProspectForm = ({ onProspectUpdated }) => {
   const fetchProspects = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/prospects`);
+      const token = localStorage.getItem('token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      
+      const res = await axios.get(`${API_URL}/prospects`, { headers });
       setProspects(res.data);
       setError(null);
     } catch (err) {
@@ -53,12 +78,15 @@ const ProspectForm = ({ onProspectUpdated }) => {
     setLoading(true);
     
     try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      
       if (editingId) {
         // Mise à jour d'un prospect existant
-        await axios.put(`${API_URL}/prospects/${editingId}`, formData);
+        await axios.put(`${API_URL}/prospects/${editingId}`, formData, { headers });
       } else {
         // Ajout d'un nouveau prospect
-        await axios.post(`${API_URL}/prospects`, formData);
+        await axios.post(`${API_URL}/prospects`, formData, { headers });
       }
       
       // Réinitialiser le formulaire
@@ -99,7 +127,7 @@ const ProspectForm = ({ onProspectUpdated }) => {
       gestionnaire: prospect.gestionnaire,
       statut: prospect.statut
     });
-    setEditingId(prospect._id); // Notez que MongoDB utilise _id
+    setEditingId(prospect._id);
     setShowForm(true);
   };
 
@@ -107,14 +135,11 @@ const ProspectForm = ({ onProspectUpdated }) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce prospect?')) {
       setLoading(true);
       try {
-        // Check what's actually in your API_URL
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        
         console.log('Attempting to delete:', `${API_URL}/prospects/${id}`);
-        
-        // This should match your backend route structure
-        await axios.delete(`${API_URL}/prospects/${id}`);
-        
-        // Alternatively, if API_URL already includes '/api'
-        // await axios.delete(`${API_URL}/${id}`);
+        await axios.delete(`${API_URL}/prospects/${id}`, { headers });
         
         fetchProspects();
         setError(null);
@@ -127,13 +152,43 @@ const ProspectForm = ({ onProspectUpdated }) => {
     }
   };
 
+  const handleExportClick = () => {
+    setShowExportModal(true);
+  };
+
+  const handleCloseExportModal = () => {
+    setShowExportModal(false);
+  };
+
   return (
     <div className="prospect-container">
       <div className="prospect-header">
         <h2>Liste des Prospects</h2>
-        <button className="add-prospect-btn" onClick={() => setShowForm(true)}>
-          Ajouter un Prospect
-        </button>
+        <div className="prospect-header-actions">
+          <button 
+            className="export-prospects-btn"
+            onClick={handleExportClick}
+            style={{
+              backgroundColor: '#17a2b8',
+              color: 'white',
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginRight: '10px',
+              transition: 'all 0.3s ease',
+              fontWeight: '500'
+            }}
+          >
+            <FaDownload /> Exporter Prospects
+          </button>
+          <button className="add-prospect-btn" onClick={() => setShowForm(true)}>
+            Ajouter un Prospect
+          </button>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -190,25 +245,24 @@ const ProspectForm = ({ onProspectUpdated }) => {
             </div>
             
             <div className="form-group">
-  <label htmlFor="origine">Origine</label>
-  <select
-    id="origine"
-    name="origine"
-    value={formData.origine}
-    onChange={handleChange}
-  >
-    <option value="">-- Sélectionner une origine --</option>
-    <option value="Site web Miacorp">Site web Miacorp</option>
-    <option value="Campagne e-mailing">Campagne e-mailing</option>
-    <option value="Réseaux sociaux">Réseaux sociaux</option>
-    <option value="Salon professionnel">Salon professionnel</option>
-    <option value="Prospection directe">Prospection directe</option>
-    <option value="Publicité en ligne">Publicité en ligne</option>
-    <option value="Client existant">Client existant</option>
-    <option value="Autre">Autre</option>
-  </select>
-</div>
-
+              <label htmlFor="origine">Origine</label>
+              <select
+                id="origine"
+                name="origine"
+                value={formData.origine}
+                onChange={handleChange}
+              >
+                <option value="">-- Sélectionner une origine --</option>
+                <option value="Site web Miacorp">Site web Miacorp</option>
+                <option value="Campagne e-mailing">Campagne e-mailing</option>
+                <option value="Réseaux sociaux">Réseaux sociaux</option>
+                <option value="Salon professionnel">Salon professionnel</option>
+                <option value="Prospection directe">Prospection directe</option>
+                <option value="Publicité en ligne">Publicité en ligne</option>
+                <option value="Client existant">Client existant</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
             
             <div className="form-group">
               <label htmlFor="gestionnaire">Gestionnaire</label>
@@ -325,6 +379,12 @@ const ProspectForm = ({ onProspectUpdated }) => {
           </table>
         </div>
       )}
+
+      {/* Modal d'export */}
+      <ExportModal 
+        isOpen={showExportModal} 
+        onClose={handleCloseExportModal} 
+      />
     </div>
   );
 };

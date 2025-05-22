@@ -154,9 +154,20 @@ export const clientService = {
     return response.data;
   },
   updateFicheClient: async (id, ficheClientData) => {
-    const response = await API.put(`/clients/${id}/fiche-client`, ficheClientData);
-    return response.data;
-  },
+  // Formatage des dates avant envoi
+  const formattedData = {
+    ...ficheClientData,
+    datePremierBilan: ficheClientData.datePremierBilan?.toISOString(),
+    dateDebutMission: ficheClientData.dateDebutMission?.toISOString(),
+    dateCulture: ficheClientData.dateCulture?.toISOString(),
+    jourTVA: ficheClientData.jourTVA?.toISOString(),
+    dateContrat: ficheClientData.dateContrat?.toISOString(),
+    dateContratCN2C: ficheClientData.dateContratCN2C?.toISOString()
+  };
+  
+  const response = await API.put(`/clients/${id}/ficheClient`, formattedData);
+  return response.data;
+},
 };
 
 export default API;

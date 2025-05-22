@@ -6,6 +6,7 @@ const prospectRoutes = require('./Routes/prospectRoutes');
 const ticketRoutes = require('./Routes/ticket');
 const clientRoutes = require('./Routes/clientRoutes'); // Ajout des routes client
 const errorHandler = require('./Middleware/errorHandler');
+const exportRoutes = require('./Routes/exportRoutes');
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use(cors({
 
 // Middleware pour parser le JSON
 app.use(express.json());
+
+app.use('/api/export', exportRoutes);
 
 // Routes API
 app.use('/api/auth', authRoutes);

@@ -4,7 +4,7 @@ import { FaChevronDown, FaChevronRight, FaStar, FaLock, FaCog, FaSave, FaTimes, 
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import '../styles/ClientForm.css';
-import { clientService } from '../services/api';
+import { clientService, apiService } from '../services/api';
 import { useNavigate } from 'react-router-dom'; // Importation du hook de navigation
 
 const ClientForm = ({ clientId, onSave, onCancel }) => {
@@ -290,7 +290,7 @@ const handleAddOrganisme = async () => {
     
     if (clientId) {
       setLoading(true);
-      await clientService.addOrganisme(clientId, nouvelOrganisme);
+      await apiService.addOrganisme(clientId, nouvelOrganisme);
       await fetchClientData();
       setSuccessMessage('Organisme ajouté avec succès');
     } else {
@@ -316,6 +316,34 @@ const handleAddOrganisme = async () => {
   }
 };
 
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    setLoading(true);
+    
+    // Préparer les données à envoyer
+    const dataToSend = {
+      ...formData,
+      // S'assurer que les tableaux sont bien envoyés
+      bilans: formData.bilans || [],
+      organismes: formData.organismes || []
+    };
+
+    if (clientId) {
+      await clientService.updateClient(clientId, dataToSend);
+      setSuccessMessage('Client mis à jour avec succès');
+    } else {
+      await clientService.createClient(dataToSend);
+      setSuccessMessage('Client créé avec succès');
+    }
+  } catch (error) {
+    console.error('Erreur:', error);
+    setError(`Erreur lors de ${clientId ? 'la mise à jour' : 'la création'} du client`);
+  } finally {
+    setLoading(false);
+  }
+};
+
 const handleUpdateFicheClient = async () => {
   try {
     if (clientId) {
@@ -326,355 +354,331 @@ const handleUpdateFicheClient = async () => {
       setSuccessMessage('Fiche client prête (sera enregistrée avec le client)');
     }
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de la fiche client:', error);
-    setError('Erreur lors de la mise à jour de la fiche client');
+    console.error('Erreur:', error.response?.data || error.message);
+    setError(`Erreur: ${error.response?.data?.message || error.message}`);
   } finally {
     setLoading(false);
   }
 };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    setLoading(true);
-    
-    console.log('clientService disponible:', !!clientService);
-    console.log('Méthodes disponibles:', Object.keys(clientService));
-    console.log('Données du formulaire:', formData);
-    
-    if (clientId) {
-      console.log(`Tentative de mise à jour du client ${clientId}`);
-      await clientService.updateClient(clientId, formData);
-      setSuccessMessage('Client mis à jour avec succès');
-      
-      // Si onSave existe, on l'appelle
-      if (onSave) onSave();
-    } else {
-      console.log('Tentative de création d\'un nouveau client');
-      await clientService.createClient(formData);
-      setSuccessMessage('Client créé avec succès');
-      
-      // Redirection vers la liste des clients après 1 seconde
-      // setTimeout(() => {
-      //   navigate('/clients');
-      // }, 1000);
-    }
-  } catch (error) {
-    console.error('Erreur détaillée:', error);
-    setError(`Erreur lors de ${clientId ? 'la mise à jour' : 'la création'} du client: ${error.message}`);
-  } finally {
-    setLoading(false);
-  }
-};
+  console.log('Données envoyées:', {
+  ...formData,
+  bilans: formData.bilans,
+  organismes: formData.organismes
+});
 
-return (
+
+return ( 
   <div className="client-form-container">
     <form onSubmit={handleSubmit}>
-      {/* Section Informations de base */}
-      <div className="section-container">
-        <div 
-          className="section-header" 
-          onClick={() => toggleSection('infoBase')}
-        >
-          {expandedSections.infoBase ? <FaChevronDown /> : <FaChevronRight />}
-          <span>Informations de base</span>
-          <div className="section-actions">
-            <FaStar className="action-icon" />
-            <FaLock className="action-icon" />
-            <FaCog className="action-icon" />
-          </div>
-        </div>
-        
-        {expandedSections.infoBase && (
-          <div className="section-content">
-            <div className="form-row">
-              <div className="form-group">
-                <label>Forme juridique</label>
-                <input 
-                  type="text" 
-                  name="formeJuridique" 
-                  value={formData.formeJuridique}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>Nom commercial</label>
-                <input 
-                  type="text" 
-                  name="nomCommercial" 
-                  value={formData.nomCommercial}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Numéro RCS</label>
-                <input 
-                  type="text" 
-                  name="numeroRCS" 
-                  value={formData.numeroRCS}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>SIRET</label>
-                <input 
-                  type="text" 
-                  name="siret" 
-                  value={formData.siret}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Code APE</label>
-                <input 
-                  type="text" 
-                  name="codeAPE" 
-                  value={formData.codeAPE}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>Nom & Prénom</label>
-                <input 
-                  type="text" 
-                  name="nomPrenom" 
-                  value={formData.nomPrenom}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Date de création</label>
-                <DatePicker
-                  selected={formData.dateCreation}
-                  onChange={(date) => handleDateChange(date, 'dateCreation')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-              <div className="form-group">
-                <label>Manager</label>
-                <input 
-                  type="text" 
-                  name="manager" 
-                  value={formData.manager}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Adresse siège</label>
-                <input 
-                  type="text" 
-                  name="adresseSiege" 
-                  value={formData.adresseSiege}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="form-group">
-                <label>Capitale social</label>
-                <input 
-                  type="text" 
-                  name="capitaleSocial" 
-                  value={formData.capitaleSocial}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Date de clôture</label>
-                <DatePicker
-                  selected={formData.dateCloture}
-                  onChange={(date) => handleDateChange(date, 'dateCloture')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-              <div className="form-group">
-                <label>Inscription RM</label>
-                <DatePicker
-                  selected={formData.inscriptionRM}
-                  onChange={(date) => handleDateChange(date, 'inscriptionRM')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Section Fiche client */}
-      <div className="section-container">
-        <div 
-          className="section-header" 
-          onClick={() => toggleSection('ficheClient')}
-        >
-          {expandedSections.ficheClient ? <FaChevronDown /> : <FaChevronRight />}
-          <span>Fiche client</span>
-          <div className="section-actions">
-            <FaStar className="action-icon" />
-            <FaLock className="action-icon" />
-            <FaCog className="action-icon" />
-          </div>
-        </div>
-        
-        {expandedSections.ficheClient && (
-          <div className="section-content">
-            <div className="form-row">
-              <div className="form-group checkbox-group">
-                <label>
-                  <input 
-                    type="checkbox" 
-                    name="ficheClient.paie" 
-                    checked={formData.ficheClient.paie}
-                    onChange={handleFicheClientChange}
-                  />
-                  Paie
-                </label>
-              </div>
-              <div className="form-group">
-                <label>Date premier bilan</label>
-                <DatePicker
-                  selected={formData.ficheClient.datePremierBilan}
-                  onChange={(date) => handleFicheClientDateChange(date, 'datePremierBilan')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Date début mission</label>
-                <DatePicker
-                  selected={formData.ficheClient.dateDebutMission}
-                  onChange={(date) => handleFicheClientDateChange(date, 'dateDebutMission')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-              <div className="form-group">
-                <label>Date culture</label>
-                <DatePicker
-                  selected={formData.ficheClient.dateCulture}
-                  onChange={(date) => handleFicheClientDateChange(date, 'dateCulture')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Régime TVA</label>
-                <select 
-                  name="ficheClient.regimeTVA" 
-                  value={formData.ficheClient.regimeTVA}
-                  onChange={handleFicheClientChange}
-                >
-                  {optionsRegimeTVA.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Régime IS</label>
-                <select 
-                  name="ficheClient.regimeIS" 
-                  value={formData.ficheClient.regimeIS}
-                  onChange={handleFicheClientChange}
-                >
-                  {optionsRegimeIS.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Jour TVA</label>
-                <DatePicker
-                  selected={formData.ficheClient.jourTVA}
-                  onChange={(date) => handleFicheClientDateChange(date, 'jourTVA')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-              <div className="form-group">
-                <label>Type TVA</label>
-                <select 
-                  name="ficheClient.typeTVA" 
-                  value={formData.ficheClient.typeTVA}
-                  onChange={handleFicheClientChange}
-                >
-                  {optionsTypeTVA.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group">
-                <label>Date contrat</label>
-                <DatePicker
-                  selected={formData.ficheClient.dateContrat}
-                  onChange={(date) => handleFicheClientDateChange(date, 'dateContrat')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-              <div className="form-group">
-                <label>Date contrat CN2C</label>
-                <DatePicker
-                  selected={formData.ficheClient.dateContratCN2C}
-                  onChange={(date) => handleFicheClientDateChange(date, 'dateContratCN2C')}
-                  dateFormat="dd-MM-yyyy"
-                  className="datepicker-input"
-                />
-              </div>
-            </div>
-            
-            <div className="form-row">
-              <div className="form-group checkbox-group">
-                <label>
-                  <input 
-                    type="checkbox" 
-                    name="ficheClient.compteFiscale" 
-                    checked={formData.ficheClient.compteFiscale}
-                    onChange={handleFicheClientChange}
-                  />
-                  Compte fiscale
-                </label>
-              </div>
-            </div>
-            
-            <div className="form-actions">
-              <button type="button" className="btn-save" onClick={handleUpdateFicheClient} disabled={loading}>
-                <FaSave /> Enregistrer la fiche
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Colonne droite */}
       <div className="form-columns">
-        <div className="column">
+        {/* Colonne gauche */}
+        <div className="column left-column">
+          {/* Section Informations de base */}
+          <div className="section-container">
+            <div 
+              className="section-header" 
+              onClick={() => toggleSection('infoBase')}
+            >
+              {expandedSections.infoBase ? <FaChevronDown /> : <FaChevronRight />}
+              <span>Informations de base</span>
+              <div className="section-actions">
+                <FaStar className="action-icon" />
+                <FaLock className="action-icon" />
+                <FaCog className="action-icon" />
+              </div>
+            </div>
+            
+            {expandedSections.infoBase && (
+              <div className="section-content">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Forme juridique</label>
+                    <input 
+                      type="text" 
+                      name="formeJuridique" 
+                      value={formData.formeJuridique}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Nom commercial</label>
+                    <input 
+                      type="text" 
+                      name="nomCommercial" 
+                      value={formData.nomCommercial}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Numéro RCS</label>
+                    <input 
+                      type="text" 
+                      name="numeroRCS" 
+                      value={formData.numeroRCS}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>SIRET</label>
+                    <input 
+                      type="text" 
+                      name="siret" 
+                      value={formData.siret}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Code APE</label>
+                    <input 
+                      type="text" 
+                      name="codeAPE" 
+                      value={formData.codeAPE}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Nom & Prénom</label>
+                    <input 
+                      type="text" 
+                      name="nomPrenom" 
+                      value={formData.nomPrenom}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Date de création</label>
+                    <DatePicker
+                      selected={formData.dateCreation}
+                      onChange={(date) => handleDateChange(date, 'dateCreation')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Manager</label>
+                    <input 
+                      type="text" 
+                      name="manager" 
+                      value={formData.manager}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Adresse siège</label>
+                    <input 
+                      type="text" 
+                      name="adresseSiege" 
+                      value={formData.adresseSiege}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Capitale social</label>
+                    <input 
+                      type="text" 
+                      name="capitaleSocial" 
+                      value={formData.capitaleSocial}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Date de clôture</label>
+                    <DatePicker
+                      selected={formData.dateCloture}
+                      onChange={(date) => handleDateChange(date, 'dateCloture')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Inscription RM</label>
+                    <DatePicker
+                      selected={formData.inscriptionRM}
+                      onChange={(date) => handleDateChange(date, 'inscriptionRM')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Section Fiche client */}
+          <div className="section-container">
+            <div 
+              className="section-header" 
+              onClick={() => toggleSection('ficheClient')}
+            >
+              {expandedSections.ficheClient ? <FaChevronDown /> : <FaChevronRight />}
+              <span>Fiche client</span>
+              <div className="section-actions">
+                <FaStar className="action-icon" />
+                <FaLock className="action-icon" />
+                <FaCog className="action-icon" />
+              </div>
+            </div>
+            
+            {expandedSections.ficheClient && (
+              <div className="section-content">
+                <div className="form-row">
+                  <div className="form-group checkbox-group">
+                    <label>
+                      <input 
+                        type="checkbox" 
+                        name="ficheClient.paie" 
+                        checked={formData.ficheClient.paie}
+                        onChange={handleFicheClientChange}
+                      />
+                      Paie
+                    </label>
+                  </div>
+                  <div className="form-group">
+                    <label>Date premier bilan</label>
+                    <DatePicker
+                      selected={formData.ficheClient.datePremierBilan}
+                      onChange={(date) => handleFicheClientDateChange(date, 'datePremierBilan')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Date début mission</label>
+                    <DatePicker
+                      selected={formData.ficheClient.dateDebutMission}
+                      onChange={(date) => handleFicheClientDateChange(date, 'dateDebutMission')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Date culture</label>
+                    <DatePicker
+                      selected={formData.ficheClient.dateCulture}
+                      onChange={(date) => handleFicheClientDateChange(date, 'dateCulture')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Régime TVA</label>
+                    <select 
+                      name="ficheClient.regimeTVA" 
+                      value={formData.ficheClient.regimeTVA}
+                      onChange={handleFicheClientChange}
+                    >
+                      {optionsRegimeTVA.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Régime IS</label>
+                    <select 
+                      name="ficheClient.regimeIS" 
+                      value={formData.ficheClient.regimeIS}
+                      onChange={handleFicheClientChange}
+                    >
+                      {optionsRegimeIS.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Jour TVA</label>
+                    <DatePicker
+                      selected={formData.ficheClient.jourTVA}
+                      onChange={(date) => handleFicheClientDateChange(date, 'jourTVA')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Type TVA</label>
+                    <select 
+                      name="ficheClient.typeTVA" 
+                      value={formData.ficheClient.typeTVA}
+                      onChange={handleFicheClientChange}
+                    >
+                      {optionsTypeTVA.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Date contrat</label>
+                    <DatePicker
+                      selected={formData.ficheClient.dateContrat}
+                      onChange={(date) => handleFicheClientDateChange(date, 'dateContrat')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Date contrat CN2C</label>
+                    <DatePicker
+                      selected={formData.ficheClient.dateContratCN2C}
+                      onChange={(date) => handleFicheClientDateChange(date, 'dateContratCN2C')}
+                      dateFormat="dd-MM-yyyy"
+                      className="datepicker-input"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group checkbox-group">
+                    <label>
+                      <input 
+                        type="checkbox" 
+                        name="ficheClient.compteFiscale" 
+                        checked={formData.ficheClient.compteFiscale}
+                        onChange={handleFicheClientChange}
+                      />
+                      Compte fiscale
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="form-actions">
+                  <button type="button" className="btn-save" onClick={handleUpdateFicheClient} disabled={loading}>
+                    <FaSave /> Enregistrer la fiche
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Colonne droite */}
+        <div className="column right-column">
           {/* Section Bilan */}
           <div className="section-container">
             <div 
@@ -957,7 +961,6 @@ return (
       </div>
 
       {/* Boutons d'action principaux du formulaire */}
-      
       <div className="form-footer">
         <button type="submit" className="btn-submit" disabled={loading}>
           {loading ? (
@@ -969,8 +972,8 @@ return (
           )}
         </button>
         <button type="button" className="btn-cancel" onClick={onCancel || handleCancel}>
-<FaTimes /> Annuler
-</button>
+          <FaTimes /> Annuler
+        </button>
       </div>
     </form>
 

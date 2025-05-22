@@ -120,6 +120,7 @@ export const clientService = {
     const response = await api.post(`/clients/${clientId}/bilans`, formattedBilan);
     return response.data;
   }
+  
 };
 
 export const apiService = {
