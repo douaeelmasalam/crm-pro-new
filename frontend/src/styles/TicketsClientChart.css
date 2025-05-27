@@ -1,0 +1,203 @@
+/* Conteneur principal */
+.tickets-chart-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* En-tête */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chart-title {
+  margin: 0;
+  color: #2c3e50;
+}
+
+/* Contrôles */
+.chart-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.chart-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.refresh-button {
+  padding: 8px 16px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.refresh-button:hover {
+  background-color: #2980b9;
+}
+
+/* Cartes de métriques */
+.metrics-container {
+  margin-bottom: 30px;
+}
+
+.metrics-title {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.metrics-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.metric-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 10px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  min-width: 200px;
+  transition: transform 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.metric-client-name {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+}
+
+.metric-total {
+  font-size: 24px;
+  font-weight: bold;
+  color: #3498db;
+  margin-bottom: 10px;
+}
+
+.metric-details {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+/* Graphique */
+.chart-wrapper {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+/* Tableau de données */
+.data-table-container {
+  margin-top: 30px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.data-table-title {
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+}
+
+.data-table th {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  background-color: #f8f9fa;
+}
+
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.data-table tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* Panel de debug */
+.debug-panel {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.debug-panel.demo {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.debug-title {
+  margin: 0 0 10px 0;
+  color: #495057;
+}
+
+.debug-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+/* États de chargement et erreur */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+.error-state {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 16px;
+  color: #e74c3c;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.no-data-state {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 16px;
+  color: #7f8c8d;
+  flex-direction: column;
+  gap: 10px;
+}

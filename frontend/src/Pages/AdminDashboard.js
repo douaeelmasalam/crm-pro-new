@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaPlus, FaUser, FaDownload } from 'react-icons/fa';
+import { FaPlus, FaDownload } from 'react-icons/fa'; // Supprimé FaUser car non utilisé
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import '../styles/AdminDashboard.css';
@@ -14,6 +14,9 @@ import ClientForm from '../components/ClientForm';
 import ClientList from '../components/ClientList';
 import TicketEvolutionForecastChart from '../components/TicketEvolutionForecastChart';
 import ExportDataForm from '../components/ExportDataForm';
+import TicketsClientChart from '../components/TicketsClientChart';
+import TicketsByUserChart from '../components/TicketsByUserChart';
+
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -35,7 +38,7 @@ const AdminDashboard = () => {
   const [ticketPriorityData, setTicketPriorityData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [clients, setClients] = useState([]);
+  // Supprimé la variable clients car elle n'était pas utilisée
   const [selectedClientId, setSelectedClientId] = useState(null);
   const [isCreatingClient, setIsCreatingClient] = useState(false);  
 
@@ -69,30 +72,8 @@ const AdminDashboard = () => {
     );
   };
 
-  useEffect(() => {
-    const fetchStats = () => {
-      fetchAllStats();
-    };
-    fetchStats();
-    if (location.state && location.state.activeSection) {
-      setActiveSection(location.state.activeSection);
-    }
-  }, [location]);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-    }
-  }, [navigate]);
-
-  useEffect(() => {
-    fetchClients();
-  }, []);
-
-  console.log('Token:', localStorage.getItem('token'));
-
-  const fetchAllStats = async () => {
+  // Utilisation de useCallback pour fetchAllStats pour éviter le warning de dépendance
+  const fetchAllStats = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -133,7 +114,25 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Pas de dépendances car toutes les fonctions utilisées sont stables
+
+  useEffect(() => {
+    fetchAllStats();
+    if (location.state && location.state.activeSection) {
+      setActiveSection(location.state.activeSection);
+    }
+  }, [location, fetchAllStats]); // Maintenant fetchAllStats est inclus dans les dépendances
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  // Supprimé l'useEffect pour fetchClients car la fonction n'était pas utilisée
+
+  console.log('Token:', localStorage.getItem('token'));
 
   const updateStats = (prospects, clients, users, tickets) => {
     const ouvertTickets = tickets.filter(ticket => 
@@ -193,7 +192,8 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-      setClients(response.data);
+      // Supprimé setClients car la variable n'était pas utilisée
+      console.log('Clients loaded:', response.data);
     } catch (err) {
       console.error('Erreur lors du chargement des clients:', err);
       if (err.response?.status === 401) {
@@ -201,7 +201,6 @@ const AdminDashboard = () => {
         window.location.href = '/login';
       }
       setError('Erreur lors du chargement des clients. Veuillez réessayer.');
-      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -276,11 +275,7 @@ const AdminDashboard = () => {
     fetchAllStats();
   };
 
-  const handleClientCreated = () => {
-    fetchClients();
-    fetchAllStats();
-    setIsCreatingClient(false);
-  };
+  // Supprimé handleClientCreated car il n'était pas utilisé
 
   const handleClientDeleted = () => {
     fetchClients();
@@ -379,12 +374,26 @@ const AdminDashboard = () => {
               <StatCard title="Prospects" value={stats.prospects} />
             </div>
             
+            <div className="charts-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}></div>
+
             <div className="ticket-stats-container">
               <TicketStatCard title="Total Tickets" value={stats.tickets} />
               <TicketStatCard title="Ouvert" value={stats.ouvertTickets} status="ouvert" />
               <TicketStatCard title="En cours" value={stats.enCoursTickets} status="en-cours" />
               <TicketStatCard title="Résolu" value={stats.resoluTickets} status="resolu" />
               <TicketStatCard title="Fermé" value={stats.fermeTickets} status="ferme" />
+            </div>
+
+            <div className="chart-card" style={{ flex: '1 1 100%' }}>
+             <div className="chart-card" style={{ flex: '1 1 100%', marginBottom: '20px' }}>
+            <TicketsByUserChart apiUrl={API_URL} />
+          </div>
+              
+              <TicketsClientChart 
+                apiUrl={API_URL} 
+                chartType="bar" 
+                showMetrics={false} 
+              />
             </div>
             
             <div className="charts-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
