@@ -1,7 +1,44 @@
 const mongoose = require('mongoose');
 
-// Schema pour les organismes
-const OrganismeSchema = new mongoose.Schema({
+// Schéma pour les bilans
+const bilanSchema = new mongoose.Schema({
+  regimeTVA: {
+    type: String,
+    enum: ['Réel normal', 'Réel simplifié', 'Franchise en base'],
+    default: 'Réel normal'
+  },
+  regimeIS: {
+    type: String,
+    enum: ['Réel normal', 'Réel simplifié', 'Micro-BIC', 'Micro-BNC'],
+    default: 'Réel normal'
+  },
+  dateDebut: {
+    type: Date,
+    default: Date.now
+  },
+  dateFin: {
+    type: Date,
+    default: Date.now
+  },
+  dateEcheance: {
+    type: Date,
+    default: Date.now
+  },
+  totale: {
+    type: String,
+    required: true
+  },
+  chiffreAffaire: {
+    type: String
+  },
+  resultat: {
+    type: String,
+    required: true
+  }
+}, { timestamps: true });
+
+// Schéma pour les organismes
+const organismeSchema = new mongoose.Schema({
   nom: {
     type: String,
     enum: ['Impôt', 'URSSAF', 'Net-entreprises'],
@@ -21,54 +58,23 @@ const OrganismeSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// Schema pour les bilans
-const BilanSchema = new mongoose.Schema({
-  regimeTVA: {
-    type: String,
-    enum: ['Réel normal', 'Réel simplifié', 'Franchise en base'],
-    default: 'Réel normal'
-  },
-  regimeIS: {
-    type: String,
-    enum: ['Réel normal', 'Réel simplifié', 'Micro-BIC', 'Micro-BNC'],
-    default: 'Réel normal'
-  },
-  dateDebut: {
-    type: Date,
-    required: true
-  },
-  dateFin: {
-    type: Date,
-    required: true
-  },
-  dateEcheance: {
-    type: Date
-  },
-  totale: {
-    type: String
-  },
-  chiffreAffaire: {
-    type: String
-  },
-  resultat: {
-    type: String
-  }
-}, { timestamps: true });
-
-// Schema pour les fiches client
-const FicheClientSchema = new mongoose.Schema({
+// Schéma pour la fiche client
+const ficheClientSchema = new mongoose.Schema({
   paie: {
     type: Boolean,
     default: false
   },
   datePremierBilan: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   dateDebutMission: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   dateCulture: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   regimeTVA: {
     type: String,
@@ -81,7 +87,8 @@ const FicheClientSchema = new mongoose.Schema({
     default: 'Réel normal'
   },
   jourTVA: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   typeTVA: {
     type: String,
@@ -89,71 +96,79 @@ const FicheClientSchema = new mongoose.Schema({
     default: 'Débit'
   },
   dateContrat: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   dateContratCN2C: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   compteFiscale: {
     type: Boolean,
     default: false
   }
-}, { timestamps: true });
+});
 
-// Schema principal pour le client
-const ClientSchema = new mongoose.Schema({
-  // Informations de base
-  formeJuridique: {
+// Schéma principal pour le client - TOUS LES CHAMPS DU FORMULAIRE
+const clientSchema = new mongoose.Schema({
+  // Champs obligatoires du formulaire
+  nom: {
     type: String,
     required: true
   },
+  email: {
+    type: String,
+    required: true
+  },
+  
+  // Informations de base
+  formeJuridique: {
+    type: String
+  },
+  nomCommercial: {
+    type: String
+  },
   numeroRCS: {
+    type: String
+  },
+  siret: {
     type: String
   },
   codeAPE: {
     type: String
   },
   nomPrenom: {
-    type: String,
-    required: true
-  },
-  nomCommercial: {
     type: String
+  },
+  dateCreation: {
+    type: Date,
+    default: Date.now
   },
   manager: {
     type: String
   },
-  dateCreation: {
-    type: Date
-  },
   adresseSiege: {
     type: String
-  },
-  dateCloture: {
-    type: Date
-  },
-  siret: {
-    type: String,
-    unique: true,
-    sparse: true
   },
   capitaleSocial: {
     type: String
   },
+  dateCloture: {
+    type: Date,
+    default: Date.now
+  },
   inscriptionRM: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   
-  // Relations avec les autres schémas
-  ficheClient: FicheClientSchema,
-  bilans: [BilanSchema],
-  organismes: [OrganismeSchema],
-  
-  // Champ pour lier à un utilisateur (si nécessaire)
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }
+  // Sous-schémas
+  ficheClient: {
+    type: ficheClientSchema,
+    default: () => ({})
+  },
+  bilans: [bilanSchema],
+  organismes: [organismeSchema]
 }, { timestamps: true });
 
-module.exports = mongoose.model('Client', ClientSchema);
+module.exports = mongoose.model('Client', clientSchema);

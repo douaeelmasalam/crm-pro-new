@@ -1,26 +1,34 @@
 const Client = require('../Models/Client');
-const { validationResult } = require('express-validator');
 
-// Obtenir tous les clients
-exports.getAllClients = async (req, res) => {
-  try {
-    const clients = await Client.find();
-    res.status(200).json({
-      success: true,
-      count: clients.length,
-      data: clients
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur serveur',
-      error: error.message
-    });
-  }
+// Gestion des erreurs
+const handleError = (error, res) => {
+  console.error('Erreur:', error);
+  return res.status(500).json({
+    success: false,
+    message: error.message || 'Une erreur est survenue',
+    error: process.env.NODE_ENV === 'development' ? error : {}
+  });
 };
 
-// Obtenir un client par ID
+// Récupérer tous les clients
+exports.getAllClients = async (req, res) => {
+  try {
+    const clients = await Client.find({})
+      .select('_id nomCommercial nomPrenom') // Only select these fields for efficiency
+      .sort({ nomCommercial: 1 }); // Sort alphabetically by commercial name
+
+    // Format the data for react-select
+    const formattedClients = clients.map(client => ({
+      value: client._id,
+      label: client.nomCommercial || client.nomPrenom || 'Unnamed Client' // Fallback to nomPrenom if nomCommercial doesn't exist
+    }));
+
+    res.status(200).json(formattedClients);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching clients', error: error.message });
+  }
+};
+// Récupérer un client par ID
 exports.getClientById = async (req, res) => {
   try {
     const client = await Client.findById(req.params.id);
@@ -32,68 +40,37 @@ exports.getClientById = async (req, res) => {
       });
     }
     
-    res.status(200).json({
-      success: true,
-      data: client
-    });
+    res.status(200).json(client);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur serveur',
-      error: error.message
-    });
+    return handleError(error, res);
   }
 };
 
 // Créer un nouveau client
 exports.createClient = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      success: false,
-      errors: errors.array()
-    });
-  }
-
   try {
-    const newClient = new Client(req.body);
-    const savedClient = await newClient.save();
-    
-    res.status(201).json({
-      success: true,
-      data: savedClient,
-      message: 'Client créé avec succès'
-    });
+    const clientData = {
+      ...req.body,
+      ficheClient: {
+        paie: req.body.paie,
+        datePremierBilan: new Date(req.body.datePremierBilan),
+        regimeTVA: req.body.regimeTVA,
+        regimeIS: req.body.regimeIS
+      }
+    };
+
+    const client = await Client.create(clientData);
+    res.status(201).json(client);
   } catch (error) {
-    console.error(error);
-    
-    // Gestion de l'erreur de duplication pour le SIRET
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: 'Un client avec ce SIRET existe déjà'
-      });
-    }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de la création du client',
+    res.status(400).json({ 
+      message: 'Erreur de création',
       error: error.message
     });
   }
 };
 
-// Mettre à jour un client
+// Mettre à jour un client existant
 exports.updateClient = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      success: false,
-      errors: errors.array()
-    });
-  }
-
   try {
     const client = await Client.findByIdAndUpdate(
       req.params.id,
@@ -110,25 +87,18 @@ exports.updateClient = async (req, res) => {
     
     res.status(200).json({
       success: true,
-      data: client,
-      message: 'Client mis à jour avec succès'
+      message: 'Client mis à jour avec succès',
+      data: client
     });
   } catch (error) {
-    console.error(error);
-    
-    // Gestion de l'erreur de duplication pour le SIRET
-    if (error.code === 11000) {
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
       return res.status(400).json({
         success: false,
-        message: 'Un client avec ce SIRET existe déjà'
+        message: messages.join(', ')
       });
     }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de la mise à jour du client',
-      error: error.message
-    });
+    return handleError(error, res);
   }
 };
 
@@ -149,72 +119,7 @@ exports.deleteClient = async (req, res) => {
       message: 'Client supprimé avec succès'
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de la suppression du client',
-      error: error.message
-    });
-  }
-};
-
-// Ajouter un bilan à un client
-exports.addBilan = async (req, res) => {
-  try {
-    const client = await Client.findById(req.params.id);
-    
-    if (!client) {
-      return res.status(404).json({
-        success: false,
-        message: 'Client non trouvé'
-      });
-    }
-    
-    client.bilans.push(req.body);
-    await client.save();
-    
-    res.status(200).json({
-      success: true,
-      data: client,
-      message: 'Bilan ajouté avec succès'
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de l\'ajout du bilan',
-      error: error.message
-    });
-  }
-};
-
-// Ajouter un organisme à un client
-exports.addOrganisme = async (req, res) => {
-  try {
-    const client = await Client.findById(req.params.id);
-    
-    if (!client) {
-      return res.status(404).json({
-        success: false,
-        message: 'Client non trouvé'
-      });
-    }
-    
-    client.organismes.push(req.body);
-    await client.save();
-    
-    res.status(200).json({
-      success: true,
-      data: client,
-      message: 'Organisme ajouté avec succès'
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de l\'ajout de l\'organisme',
-      error: error.message
-    });
+    return handleError(error, res);
   }
 };
 
@@ -235,15 +140,104 @@ exports.updateFicheClient = async (req, res) => {
     
     res.status(200).json({
       success: true,
-      data: client,
-      message: 'Fiche client mise à jour avec succès'
+      message: 'Fiche client mise à jour avec succès',
+      data: client.ficheClient
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: 'Erreur lors de la mise à jour de la fiche client',
-      error: error.message
+    return handleError(error, res);
+  }
+};
+
+// Ajouter un nouveau bilan
+exports.addBilan = async (req, res) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client non trouvé'
+      });
+    }
+    
+    client.bilans.push(req.body);
+    await client.save();
+    
+    res.status(201).json({
+      success: true,
+      message: 'Bilan ajouté avec succès',
+      data: client.bilans[client.bilans.length - 1]
     });
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Ajouter un nouvel organisme
+exports.addOrganisme = async (req, res) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client non trouvé'
+      });
+    }
+    
+    client.organismes.push(req.body);
+    await client.save();
+    
+    res.status(201).json({
+      success: true,
+      message: 'Organisme ajouté avec succès',
+      data: client.organismes[client.organismes.length - 1]
+    });
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Récupérer tous les bilans d'un client
+exports.getClientBilans = async (req, res) => {
+  try {
+    const client = await Client.findById(req.params.id).select('bilans');
+    
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client non trouvé'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      count: client.bilans.length,
+      data: client.bilans
+    });
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Récupérer tous les organismes d'un client
+exports.getClientOrganismes = async (req, res) => {
+  try {
+    const client = await Client.findById(req.params.id).select('organismes');
+    
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        message: 'Client non trouvé'
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      count: client.organismes.length,
+      data: client.organismes
+    });
+  } catch (error) {
+    return handleError(error, res);
   }
 };

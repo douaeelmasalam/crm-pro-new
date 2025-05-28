@@ -3,7 +3,7 @@ import { Search, X } from "lucide-react";
 import { FaDownload } from 'react-icons/fa';
 import '../styles/UserList.css';
 import EditUserForm from './EditUserForm';
-import ExportDataForm from '../components/ExportDataForm';
+import ExportDataForm from './ExportDataForm';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);

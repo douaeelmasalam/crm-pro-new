@@ -1,38 +1,76 @@
+// Vérifiez d'abord que votre fichier Routes/clientRoutes.js est correctement configuré
+// Exemple de Routes/clientRoutes.js
+
 const express = require('express');
 const router = express.Router();
-const { check } = require('express-validator');
-const clientController = require('../Controllers/clientController');
-const authMiddleware = require('../Middleware/authMiddleware');
-
-// Appliquer le middleware d'authentification à toutes les routes
-router.use(authMiddleware);
+const Client = require('../Models/Client'); // Assurez-vous que le chemin est correct
 
 // Récupérer tous les clients
-router.get('/', clientController.getAllClients);
+router.get('/', async (req, res) => {
+  try {
+    const clients = await Client.find();
+    res.json(clients);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
-// Récupérer un client par ID
-router.get('/:id', clientController.getClientById);
+// Créer un nouveau client
+router.post('/', async (req, res) => {
+  console.log('Requête de création de client reçue:', req.body);
+  
+  const client = new Client({
+    nom: req.body.nom,
+    email: req.body.email,
+    telephone: req.body.telephone,
+    adresse: req.body.adresse,
+    siret: req.body.siret,
+    // Ajoutez d'autres champs selon votre modèle
+  });
 
-// Créer un nouveau client avec validation
-router.post('/', [
-  check('formeJuridique', 'La forme juridique est requise').not().isEmpty(),
-  check('nomPrenom', 'Le nom et prénom sont requis').not().isEmpty(),
-  // Ajouter d'autres validations selon les besoins
-], clientController.createClient);
+  try {
+    const nouveauClient = await client.save();
+    res.status(201).json(nouveauClient);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Récupérer un client spécifique
+router.get('/:id', async (req, res) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ message: 'Client non trouvé' });
+    res.json(client);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 // Mettre à jour un client
-router.put('/:id', clientController.updateClient);
+router.put('/:id', async (req, res) => {
+  try {
+    const client = await Client.findByIdAndUpdate(
+      req.params.id, 
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!client) return res.status(404).json({ message: 'Client non trouvé' });
+    res.json(client);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
 // Supprimer un client
-router.delete('/:id', clientController.deleteClient);
-
-// Ajouter un bilan à un client
-router.post('/:id/bilans', clientController.addBilan);
-
-// Ajouter un organisme à un client
-router.post('/:id/organismes', clientController.addOrganisme);
-
-// Mettre à jour la fiche client
-router.put('/:id/fiche-client', clientController.updateFicheClient);
+router.delete('/:id', async (req, res) => {
+  try {
+    const client = await Client.findByIdAndDelete(req.params.id);
+    if (!client) return res.status(404).json({ message: 'Client non trouvé' });
+    res.json({ message: 'Client supprimé avec succès' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 module.exports = router;

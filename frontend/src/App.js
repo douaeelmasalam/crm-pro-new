@@ -7,9 +7,6 @@ import EditUserForm from "./components/EditUserForm";
 import CreateTicketForm from "./components/CreateTicketForm";
 import ClientForm from "./components/ClientForm";
 import ClientList from "./components/ClientList";
-import Demandes from "./Pages/Demandes";
-import Taches from "./Pages/Taches";
-import Settings from "./Pages/Settings";
 import './App.css';
 
 function App() {
@@ -57,7 +54,6 @@ function App() {
         {/* 🛠️ Pages Admin */}
         <Route path="/admin/dashboard" element={<PrivateRoute element={<AdminDashboard />} />} />
         <Route path="/admin/edit-user/:id" element={<PrivateRoute element={<EditUserForm />} />} />
-        <Route path="/admin/demandes" element={<PrivateRoute element={<Demandes />} />} />
         <Route path="/client/:id?" element={<PrivateRoute element={<ClientForm />} />} />
         <Route path="/clients" element={<ClientList />} />
         <Route path="/clients/create" element={<ClientForm />} />
@@ -67,8 +63,6 @@ function App() {
         {/* 🧑‍💼 Pages Agent */}
         <Route path="/agent/dashboard" element={<PrivateRoute element={<AgentDashboard />} />} />
         <Route path="/agent/create-ticket" element={<PrivateRoute element={<CreateTicketForm />} />} />
-        <Route path="/agent/taches" element={<PrivateRoute element={<Taches />} />} />
-        <Route path="/agent/settings" element={<PrivateRoute element={<Settings />} />} />
         
         {/* Toutes les routes liées aux clients sont maintenant gérées par les dashboards respectifs */}
       </Routes>

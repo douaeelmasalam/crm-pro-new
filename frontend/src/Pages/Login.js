@@ -6,36 +6,6 @@ function Login({ setIsLoggedIn, setUserRole, setMessage, message }) {
   const [password, setPassword] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-// src/Pages/Login.js
-// const handleLogin = async (e) => {
-//   e.preventDefault();
-//   try {
-//     const response = await fetch('http://localhost:5000/api/auth/login', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ email, password })
-//     });
-
-//     if (response.ok) {
-//       const data = await response.json();
-//       setMessage(data.message);
-//       setIsSuccess(true);
-      
-//       // Ajouter un délai de 2 secondes avant la redirection
-//       setTimeout(() => {
-//         setUserRole(data.role);
-//         setIsLoggedIn(true);
-//       }, 2000);
-//     } else {
-//       const errorText = await response.text();
-//       setMessage(errorText);
-//       setIsSuccess(false);
-//     }
-//   } catch (error) {
-//     setMessage("Une erreur réseau est survenue");
-//     setIsSuccess(false);
-//   }
-// };
 
 const handleLogin = async (e) => {
   e.preventDefault();
