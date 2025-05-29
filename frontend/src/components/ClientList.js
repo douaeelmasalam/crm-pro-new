@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaSort, FaFilter, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaSort, FaFilter, FaChevronDown, FaChevronUp, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ClientForm from './ClientForm'; // Importez votre composant ClientForm
 import '../styles/ClientList.css';
+import '../styles/Modal.css'; // Créez ce fichier CSS pour les styles modaux
 
 const ClientList = () => {
   const navigate = useNavigate();
@@ -19,6 +21,11 @@ const ClientList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [uniqueFormeJuridique, setUniqueFormeJuridique] = useState([]);
   const [uniqueManagers, setUniqueManagers] = useState([]);
+  
+  // États pour les modals
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
 
   useEffect(() => {
     fetchClients();
@@ -31,8 +38,8 @@ const ClientList = () => {
     // Apply search
     if (searchTerm) {
       result = result.filter(client => 
-        client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (client.nom && client.nom.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (client.siret && client.siret.includes(searchTerm)) ||
         (client.nomCommercial && client.nomCommercial.toLowerCase().includes(searchTerm.toLowerCase()))
       );
@@ -50,13 +57,13 @@ const ClientList = () => {
     // Apply sort
     if (sortConfig.key) {
       result.sort((a, b) => {
-        if (!a[sortConfig.key]) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (!b[sortConfig.key]) return sortConfig.direction === 'ascending' ? 1 : -1;
+        const aVal = a[sortConfig.key] || '';
+        const bVal = b[sortConfig.key] || '';
         
-        if (a[sortConfig.key] < b[sortConfig.key]) {
+        if (aVal < bVal) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
+        if (aVal > bVal) {
           return sortConfig.direction === 'ascending' ? 1 : -1;
         }
         return 0;
@@ -70,12 +77,23 @@ const ClientList = () => {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/clients');
+      console.log('Clients récupérés:', response.data);
+      
       setClients(response.data);
       setFilteredClients(response.data);
       
       // Extract unique values for filters
-      const formeJuridiqueValues = [...new Set(response.data.map(client => client.formeJuridique).filter(Boolean))];
-      const managerValues = [...new Set(response.data.map(client => client.manager).filter(Boolean))];
+      const formeJuridiqueValues = [...new Set(
+        response.data
+          .map(client => client.formeJuridique)
+          .filter(forme => forme && forme.trim() !== '')
+      )];
+      
+      const managerValues = [...new Set(
+        response.data
+          .map(client => client.manager)
+          .filter(manager => manager && manager.trim() !== '')
+      )];
       
       setUniqueFormeJuridique(formeJuridiqueValues);
       setUniqueManagers(managerValues);
@@ -88,12 +106,14 @@ const ClientList = () => {
     }
   };
 
-  const handleEdit = (clientId) => {
-    navigate(`/clients/edit/${clientId}`);
+  const handleEdit = (client) => {
+    setSelectedClient(client);
+    setShowEditModal(true);
   };
 
-  const handleView = (clientId) => {
-    navigate(`/clients/view/${clientId}`);
+  const handleView = (client) => {
+    setSelectedClient(client);
+    setShowViewModal(true);
   };
 
   const handleDelete = async (clientId) => {
@@ -150,6 +170,17 @@ const ClientList = () => {
     return date.toLocaleDateString('fr-FR');
   };
 
+  const handleCloseModal = () => {
+    setShowViewModal(false);
+    setShowEditModal(false);
+    setSelectedClient(null);
+  };
+
+  const handleClientUpdated = () => {
+    fetchClients(); // Rafraîchir la liste après mise à jour
+    handleCloseModal();
+  };
+
   return (
     <div className="client-list-container">
       <div className="client-list-header">
@@ -172,7 +203,7 @@ const ClientList = () => {
           </button>
           
           <button className="add-button" onClick={handleAddNew}>
-            <FaPlus /> Nouveau client
+            <FaPlus /> Ajouter un client
           </button>
         </div>
       </div>
@@ -271,17 +302,17 @@ const ClientList = () => {
             <tbody>
               {filteredClients.map((client) => (
                 <tr key={client._id}>
-                  <td>{client.nom}</td>
+                  <td>{client.nom || 'Non défini'}</td>
                   <td>{client.formeJuridique || 'Non défini'}</td>
                   <td>{client.siret || 'Non défini'}</td>
-                  <td>{client.email}</td>
+                  <td>{client.email || 'Non défini'}</td>
                   <td>{client.manager || 'Non défini'}</td>
                   <td>{formatDate(client.dateCreation)}</td>
                   <td className="actions-cell">
-                    <button className="action-button view" onClick={() => handleView(client._id)} title="Voir les détails">
+                    <button className="action-button view" onClick={() => handleView(client)} title="Voir les détails">
                       <FaEye />
                     </button>
-                    <button className="action-button edit" onClick={() => handleEdit(client._id)} title="Modifier">
+                    <button className="action-button edit" onClick={() => handleEdit(client)} title="Modifier">
                       <FaEdit />
                     </button>
                     <button className="action-button delete" onClick={() => handleDelete(client._id)} title="Supprimer">
@@ -298,6 +329,83 @@ const ClientList = () => {
       <div className="client-list-footer">
         <p>Total: {filteredClients.length} clients</p>
       </div>
+
+      {/* Modal pour visualiser un client */}
+      {showViewModal && selectedClient && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h2>Détails du client</h2>
+              <button className="modal-close" onClick={handleCloseModal}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="modal-content">
+              <div className="client-details">
+                <div className="detail-row">
+                  <span className="detail-label">Nom:</span>
+                  <span className="detail-value">{selectedClient.nom || 'N/A'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Forme juridique:</span>
+                  <span className="detail-value">{selectedClient.formeJuridique || 'N/A'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">SIRET:</span>
+                  <span className="detail-value">{selectedClient.siret || 'N/A'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Email:</span>
+                  <span className="detail-value">{selectedClient.email || 'N/A'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Manager:</span>
+                  <span className="detail-value">{selectedClient.manager || 'N/A'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Date de création:</span>
+                  <span className="detail-value">{formatDate(selectedClient.dateCreation)}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Adresse siège:</span>
+                  <span className="detail-value">{selectedClient.adresseSiege || 'N/A'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Capitale social:</span>
+                  <span className="detail-value">{selectedClient.capitaleSocial || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-close" onClick={handleCloseModal}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal pour éditer un client */}
+      {showEditModal && selectedClient && (
+        <div className="modal-overlay">
+          <div className="modal large-modal">
+            <div className="modal-header">
+              <h2>Modifier le client</h2>
+              <button className="modal-close" onClick={handleCloseModal}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="modal-content">
+              <ClientForm 
+                clientData={selectedClient} 
+                onSave={handleClientUpdated}
+                onCancel={handleCloseModal}
+                isModal={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

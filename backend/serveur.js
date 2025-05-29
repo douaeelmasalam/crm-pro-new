@@ -13,6 +13,7 @@ const prospectRoutes = require('./Routes/prospectRoutes');
 const ticketRoutes = require('./Routes/ticket');
 const subTicketRoutes = require('./Routes/subTicketRoutes');
 const clientRoutes = require('./Routes/clientRoutes');
+const exportRoutes = require('./Routes/exportRoutes');
 
 // Middleware de gestion des erreurs
 const errorHandler = require('./Middleware/errorHandler');
@@ -25,9 +26,10 @@ const app = express();
 
 // Middleware CORS
 app.use(cors({
-  origin: ['http://localhost:3000'], // Ajoute ici d'autres URLs frontend si besoin
+  origin: ['http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 
 // Middleware pour parser le JSON
@@ -49,6 +51,7 @@ app.use('/api/prospects', prospectRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/subtickets', subTicketRoutes);
 app.use('/api/clients', clientRoutes);
+app.use('/api/export', exportRoutes);
 
 // Route tableau de bord
 app.get('/api/dashboard', (req, res) => {

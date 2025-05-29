@@ -3,7 +3,6 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import '../styles/ExportDataForm.css';
 
-
 const ExportDataForm = ({ exportType }) => {
   const [loading, setLoading] = useState(false);
   const [format, setFormat] = useState('csv');
@@ -16,91 +15,146 @@ const ExportDataForm = ({ exportType }) => {
   const handleExport = async () => {
     setLoading(true);
     try {
-      // Construction de l'URL avec les paramètres
-      let url = `http://localhost:5000/api/export/${exportType}/${format}?`;
+      // DEBUG: Vérification des valeurs de filtre
+      console.log('Filtres sélectionnés:', {
+        startDate, endDate, status, role, priority, format, exportType
+      });
+
+      let url = `http://localhost:5000/api/export/${exportType}/${format}`;
       const params = [];
-      
+
+      // Ajouter les paramètres selon le type d'export
       if (startDate) params.push(`startDate=${encodeURIComponent(startDate)}`);
       if (endDate) params.push(`endDate=${encodeURIComponent(endDate)}`);
-      if (status) params.push(`status=${encodeURIComponent(status)}`);
-      if (role) params.push(`role=${encodeURIComponent(role)}`);
-      if (priority) params.push(`priority=${encodeURIComponent(priority)}`);
       
-      url += params.join('&');
+      // Pour les utilisateurs, utiliser 'role' au lieu de 'status'
+      if (exportType === 'users') {
+        if (role) params.push(`role=${encodeURIComponent(role)}`);
+      } else {
+        if (status) params.push(`status=${encodeURIComponent(status)}`);
+      }
       
-      console.log('URL de requête:', url); // Debug
-      
-      // Pour JSON, traitement spécial
+      if (priority && exportType === 'tickets') {
+        params.push(`priority=${encodeURIComponent(priority)}`);
+      }
+
+      if (params.length > 0) {
+        url += `?${params.join('&')}`;
+      }
+
+      console.log('[DEBUG] URL construite:', url);
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error("Token d'authentification manquant");
+      }
+
       if (format === 'json') {
         const response = await axios({
           url,
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
             'Content-Type': 'application/json'
-          }
+          },
+          timeout: 30000
         });
-        
-        console.log('Réponse JSON:', response.data); // Debug
-        
-        // Créer un fichier JSON téléchargeable
-        const jsonData = JSON.stringify(response.data, null, 2);
+
+        console.log('[DEBUG] Réponse JSON reçue:', response.data);
+
+        // Vérifier si la réponse contient des données
+        let dataToExport = response.data;
+        if (response.data && response.data.data) {
+          dataToExport = response.data.data;
+        }
+
+        if (!dataToExport || (Array.isArray(dataToExport) && dataToExport.length === 0)) {
+          toast.warning('Aucune donnée trouvée');
+          return;
+        }
+
+        const jsonData = JSON.stringify(dataToExport, null, 2);
         const blob = new Blob([jsonData], { type: 'application/json' });
         const downloadUrl = window.URL.createObjectURL(blob);
-        
+
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.setAttribute('download', `${exportType}_export.json`);
+        link.setAttribute('download', `${exportType}_export_${Date.now()}.json`);
         document.body.appendChild(link);
         link.click();
         link.remove();
         window.URL.revokeObjectURL(downloadUrl);
-        
-        toast?.success(`Exportation JSON réussie`) || alert(`Exportation JSON réussie`);
+
+        toast.success(`Exportation JSON réussie`);
         return;
       }
-      
-      // Téléchargement via Blob pour CSV et XLSX
+
+      // DEBUG : Début de la requête CSV/XLSX
+      console.log('[DEBUG] Envoi requête axios pour format:', format);
+
       const response = await axios({
         url,
         method: 'GET',
         responseType: 'blob',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+          'Authorization': `Bearer ${token}`,
+          'Accept': format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        },
+        timeout: 30000
       });
-      
-      // Vérifier le type de contenu de la réponse
-      const contentType = response.headers['content-type'];
-      console.log('Content-Type:', contentType); // Debug
-      
-      // Création du lien de téléchargement
+
+      // DEBUG : Affichage de la taille du blob
+      console.log('[DEBUG] Taille du fichier blob reçu:', response.data?.size);
+      console.log('[DEBUG] Headers:', response.headers);
+
+      if (!response.data || response.data.size === 0) {
+        toast.warning('Aucune donnée trouvée dans le fichier exporté');
+        return;
+      }
+
       const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.setAttribute('download', `${exportType}_export.${format}`);
+      link.setAttribute('download', `${exportType}_export_${Date.now()}.${format}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(downloadUrl);
-      
-      toast?.success(`Exportation ${format.toUpperCase()} réussie`) || alert(`Exportation ${format.toUpperCase()} réussie`);
+
+      toast.success(`Exportation ${format.toUpperCase()} réussie`);
+
     } catch (error) {
-      console.error(`Erreur lors de l'exportation:`, error);
-      
-      // Afficher plus de détails sur l'erreur
+      console.error('[ERREUR]', error);
+
       let errorMessage = 'Erreur inconnue';
+
       if (error.response) {
-        errorMessage = `Erreur ${error.response.status}: ${error.response.statusText}`;
-        console.log('Détails de l\'erreur:', error.response.data);
+        const status = error.response.status;
+        const data = error.response.data;
+
+        console.error('[ERREUR RÉPONSE SERVEUR]', status, data);
+
+        if (status === 404) {
+          errorMessage = data?.message || 'Aucune donnée trouvée';
+        } else if (status === 401) {
+          errorMessage = 'Non autorisé - veuillez vous reconnecter';
+        } else if (status === 500) {
+          errorMessage = data?.message || 'Erreur interne du serveur';
+        } else {
+          errorMessage = `Erreur ${status}: ${data?.message || error.response.statusText}`;
+        }
+
       } else if (error.request) {
+        console.error('[ERREUR AUCUNE RÉPONSE]', error.request);
         errorMessage = 'Aucune réponse du serveur';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'La requête a expiré (timeout)';
       } else {
         errorMessage = error.message;
       }
-      
-      toast?.error(`Erreur lors de l'exportation: ${errorMessage}`) || alert(`Erreur lors de l'exportation: ${errorMessage}`);
+
+      toast.error(`Erreur: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -124,8 +178,8 @@ const ExportDataForm = ({ exportType }) => {
           </select>
         </div>
         
-        {/* Dates - afficher pour tous les types d'export sauf si c'est dashboard */}
-        {exportType !== 'dashboard' && (
+        {/* Dates - afficher pour tous les types d'export sauf users et dashboard */}
+        {exportType !== 'users' && exportType !== 'dashboard' && (
           <>
             <div className="form-group">
               <label className="form-label">Date de début</label>
@@ -149,7 +203,7 @@ const ExportDataForm = ({ exportType }) => {
           </>
         )}
         
-        {/* Pour Dashboard, n'afficher que les dates */}
+        {/* Pour dashboard seulement */}
         {exportType === 'dashboard' && (
           <>
             <div className="form-group">
@@ -174,8 +228,8 @@ const ExportDataForm = ({ exportType }) => {
           </>
         )}
         
-        {/* Pour clients */}
-        {exportType === 'clients' && (
+        {/* Pour clients et prospects */}
+        {(exportType === 'clients' || exportType === 'prospects') && (
           <div className="form-group">
             <label className="form-label">Statut</label>
             <select
@@ -184,8 +238,19 @@ const ExportDataForm = ({ exportType }) => {
               onChange={(e) => setStatus(e.target.value)}
             >
               <option value="">Tous</option>
-              <option value="actif">Actif</option>
-              <option value="inactif">Inactif</option>
+              {exportType === 'clients' ? (
+                <>
+                  <option value="actif">Actif</option>
+                  <option value="inactif">Inactif</option>
+                </>
+              ) : (
+                <>
+                  <option value="nouveau">Nouveau</option>
+                  <option value="contacté">Contacté</option>
+                  <option value="qualifié">Qualifié</option>
+                  <option value="non_qualifié">Non qualifié</option>
+                </>
+              )}
             </select>
           </div>
         )}
@@ -224,7 +289,7 @@ const ExportDataForm = ({ exportType }) => {
           </>
         )}
         
-        {/* Pour users */}
+        {/* Pour users - utiliser le filtre role */}
         {exportType === 'users' && (
           <div className="form-group">
             <label className="form-label">Rôle</label>
@@ -235,30 +300,13 @@ const ExportDataForm = ({ exportType }) => {
             >
               <option value="">Tous</option>
               <option value="admin">Admin</option>
+           
               <option value="user">Utilisateur</option>
+
             </select>
           </div>
         )}
       </div>
-
-      {/* Pour prospects */}
-{exportType === 'prospects' && (
-  <div className="form-group">
-    <label className="form-label">Statut</label>
-    <select
-      className="form-select"
-      value={status}
-      onChange={(e) => setStatus(e.target.value)}
-    >
-      <option value="">Tous</option>
-      <option value="nouveau">Nouveau</option>
-      <option value="contacté">Contacté</option>
-      <option value="qualifié">Qualifié</option>
-      <option value="non_qualifié">Non qualifié</option>
-    </select>
-  </div>
-)}
-
       
       <button
         className="export-button"

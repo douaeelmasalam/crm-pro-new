@@ -111,17 +111,18 @@ const ficheClientSchema = new mongoose.Schema({
 
 // Schéma principal pour le client - TOUS LES CHAMPS DU FORMULAIRE
 const clientSchema = new mongoose.Schema({
-  // Champs obligatoires du formulaire
+  // =================== INFORMATIONS DE BASE ===================
+  // Champs obligatoires
   nom: {
     type: String,
-    required: true
+    required: [true, 'Le nom est obligatoire']
   },
   email: {
     type: String,
-    required: true
+    required: [true, 'L\'email est obligatoire']
   },
   
-  // Informations de base
+  // Informations entreprise
   formeJuridique: {
     type: String
   },
@@ -162,13 +163,64 @@ const clientSchema = new mongoose.Schema({
     default: Date.now
   },
   
-  // Sous-schémas
+  // =================== FICHE CLIENT ===================
   ficheClient: {
-    type: ficheClientSchema,
-    default: () => ({})
+    paie: {
+      type: Boolean,
+      default: false
+    },
+    datePremierBilan: {
+      type: Date,
+      default: Date.now
+    },
+    dateDebutMission: {
+      type: Date,
+      default: Date.now
+    },
+    dateCulture: {
+      type: Date,
+      default: Date.now
+    },
+    regimeTVA: {
+      type: String,
+      enum: ['Réel normal', 'Réel simplifié', 'Franchise en base'],
+      default: 'Réel normal'
+    },
+    regimeIS: {
+      type: String,
+      enum: ['Réel normal', 'Réel simplifié', 'Micro-BIC', 'Micro-BNC'],
+      default: 'Réel normal'
+    },
+    jourTVA: {
+      type: Date,
+      default: Date.now
+    },
+    typeTVA: {
+      type: String,
+      enum: ['Débit', 'Encaissement'],
+      default: 'Débit'
+    },
+    dateContrat: {
+      type: Date,
+      default: Date.now
+    },
+    dateContratCN2C: {
+      type: Date,
+      default: Date.now
+    },
+    compteFiscale: {
+      type: Boolean,
+      default: false
+    }
   },
+  
+  // =================== BILANS ET ORGANISMES ===================
   bilans: [bilanSchema],
   organismes: [organismeSchema]
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  // Cette option permet de sauvegarder les champs même s'ils ne sont pas dans le schéma
+  strict: false 
+});
 
 module.exports = mongoose.model('Client', clientSchema);

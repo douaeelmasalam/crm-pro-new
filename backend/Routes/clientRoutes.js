@@ -1,76 +1,43 @@
-// Vérifiez d'abord que votre fichier Routes/clientRoutes.js est correctement configuré
-// Exemple de Routes/clientRoutes.js
-
 const express = require('express');
 const router = express.Router();
-const Client = require('../Models/Client'); // Assurez-vous que le chemin est correct
+const clientController = require('../Controllers/clientController'); // Assurez-vous du bon chemin
 
-// Récupérer tous les clients
-router.get('/', async (req, res) => {
-  try {
-    const clients = await Client.find();
-    res.json(clients);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+// =================== ROUTES PRINCIPALES ===================
+
+// GET /api/clients - Récupérer tous les clients
+router.get('/', clientController.getAllClients);
+
+// GET /api/clients/select - Pour les select (react-select)
+router.get('/select', clientController.getClientsForSelect);
+
+// GET /api/clients/:id - Récupérer un client par ID
+router.get('/:id', clientController.getClientById);
+
+// POST /api/clients - Créer un nouveau client (ROUTE PRINCIPALE)
+router.post('/', clientController.createClient);
+
+// PUT /api/clients/:id - Mettre à jour un client
+router.put('/:id', clientController.updateClient);
+
+// DELETE /api/clients/:id - Supprimer un client
+router.delete('/:id', clientController.deleteClient);
+
+// =================== ROUTES SPÉCIALISÉES ===================
+
+// POST /api/clients/:id/bilans - Ajouter un bilan
+router.post('/:id/bilans', clientController.addBilan);
+
+// POST /api/clients/:id/organismes - Ajouter un organisme
+router.post('/:id/organismes', clientController.addOrganisme);
+
+// =================== MIDDLEWARE DE DEBUG (Optionnel) ===================
+// Middleware pour logger toutes les requêtes (à placer en premier)
+router.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Body:', JSON.stringify(req.body, null, 2));
   }
-});
-
-// Créer un nouveau client
-router.post('/', async (req, res) => {
-  console.log('Requête de création de client reçue:', req.body);
-  
-  const client = new Client({
-    nom: req.body.nom,
-    email: req.body.email,
-    telephone: req.body.telephone,
-    adresse: req.body.adresse,
-    siret: req.body.siret,
-    // Ajoutez d'autres champs selon votre modèle
-  });
-
-  try {
-    const nouveauClient = await client.save();
-    res.status(201).json(nouveauClient);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// Récupérer un client spécifique
-router.get('/:id', async (req, res) => {
-  try {
-    const client = await Client.findById(req.params.id);
-    if (!client) return res.status(404).json({ message: 'Client non trouvé' });
-    res.json(client);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Mettre à jour un client
-router.put('/:id', async (req, res) => {
-  try {
-    const client = await Client.findByIdAndUpdate(
-      req.params.id, 
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!client) return res.status(404).json({ message: 'Client non trouvé' });
-    res.json(client);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// Supprimer un client
-router.delete('/:id', async (req, res) => {
-  try {
-    const client = await Client.findByIdAndDelete(req.params.id);
-    if (!client) return res.status(404).json({ message: 'Client non trouvé' });
-    res.json({ message: 'Client supprimé avec succès' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  next();
 });
 
 module.exports = router;
