@@ -37,32 +37,41 @@ const ExportDataForm = ({ exportType, onExportComplete }) => {
 
   const handleStandardExport = async () => {
     try {
+      // Construction de l'URL avec vérification
       let url = `http://localhost:5000/api/export/${exportType}/${format}`;
       const params = [];
 
-      // Filtres par date (sauf pour users)
-      if (exportType !== 'users') {
+      // Pour les utilisateurs, on utilise des filtres spécifiques
+      if (exportType === 'users') {
+        if (role && role.trim() !== '') {
+          params.push(`role=${encodeURIComponent(role)}`);
+        }
+        if (status && status.trim() !== '') {
+          params.push(`status=${encodeURIComponent(status)}`);
+        }
+      } else {
+        // Filtres par date pour les autres types
         if (startDate) params.push(`startDate=${encodeURIComponent(startDate)}`);
         if (endDate) params.push(`endDate=${encodeURIComponent(endDate)}`);
-      }
-      
-      // Filtres spécifiques par type
-      if (exportType === 'users') {
-        if (role) params.push(`role=${encodeURIComponent(role)}`);
-        if (status) params.push(`status=${encodeURIComponent(status)}`);
-      } else if (exportType === 'tickets') {
-        if (status) params.push(`status=${encodeURIComponent(status)}`);
-        if (priority) params.push(`priority=${encodeURIComponent(priority)}`);
-      } else if (exportType === 'clients' || exportType === 'prospects') {
-        if (status) params.push(`status=${encodeURIComponent(status)}`);
+        
+        // Filtres spécifiques par type
+        if (exportType === 'tickets') {
+          if (status) params.push(`status=${encodeURIComponent(status)}`);
+          if (priority) params.push(`priority=${encodeURIComponent(priority)}`);
+        } else if (exportType === 'clients' || exportType === 'prospects') {
+          if (status) params.push(`status=${encodeURIComponent(status)}`);
+        }
       }
 
       if (params.length > 0) {
         url += `?${params.join('&')}`;
       }
 
-      console.log('[DEBUG] URL construite:', url);
+      console.log('[DEBUG] URL construite pour export:', url);
 
+      // Test de connexion avant export
+      await testServerConnection();
+      
       await executeExport(url);
 
       // Fermer le modal après export réussi
@@ -76,6 +85,167 @@ const ExportDataForm = ({ exportType, onExportComplete }) => {
     }
   };
 
+  // Nouvelle fonction pour tester la connexion serveur
+ const testServerConnection = async () => {
+  try {
+    const testUrl = 'http://localhost:5000/api/users';
+    const token = localStorage.getItem('token');
+    
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    const response = await axios.get(testUrl, { 
+      headers,
+      timeout: 5000 
+    });
+    
+    console.log('[TEST CONNEXION] Serveur accessible, nombre d\'utilisateurs:', response.data?.length || 0);
+    
+    // Ne pas lancer d'erreur si aucun utilisateur - c'est normal
+    return true;
+    
+  } catch (error) {
+    console.error('[TEST CONNEXION ÉCHOUÉ]', error);
+    if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+      throw new Error('Impossible de se connecter au serveur. Vérifiez que le serveur backend est démarré sur le port 5000.');
+    }
+    if (error.response?.status === 404) {
+      throw new Error('L\'endpoint /api/users n\'existe pas sur le serveur.');
+    }
+    throw error;
+  }
+};
+
+const executeExport = async (url) => {
+  const token = localStorage.getItem('token');
+  
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  try {
+    if (format === 'json') {
+      // Export JSON
+      const response = await axios({
+        url,
+        method: 'GET',
+        headers: {
+          ...headers,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      });
+
+      console.log('[DEBUG] Réponse JSON reçue:', response.data);
+
+      let dataToExport = response.data;
+      
+      // Gestion des différents formats de réponse
+      if (response.data && response.data.data) {
+        dataToExport = response.data.data;
+      } else if (response.data && Array.isArray(response.data)) {
+        dataToExport = response.data;
+      }
+
+      if (!dataToExport || (Array.isArray(dataToExport) && dataToExport.length === 0)) {
+        toast.warning('Aucune donnée trouvée pour les critères sélectionnés');
+        return;
+      }
+
+      const jsonData = JSON.stringify(dataToExport, null, 2);
+      downloadFile(jsonData, 'application/json', `${exportType}_export_${Date.now()}.json`);
+
+    } else {
+      // Export CSV/Excel
+      console.log('[DEBUG] Tentative d\'export en format:', format);
+      
+      const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'blob',
+        headers: {
+          ...headers,
+          'Accept': format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel'
+        },
+        timeout: 30000
+      });
+
+      console.log('[DEBUG] Réponse blob reçue, taille:', response.data?.size);
+
+      if (!response.data || response.data.size === 0) {
+        toast.warning('Aucune donnée trouvée dans le fichier exporté');
+        return;
+      }
+
+      // Vérifier si on a reçu une erreur JSON au lieu d'un fichier
+      const contentType = response.headers['content-type'];
+      console.log('[DEBUG] Content-Type reçu:', contentType);
+
+      if (contentType && contentType.includes('application/json')) {
+        // Convertir le blob en texte pour lire l'erreur
+        const text = await response.data.text();
+        try {
+          const errorData = JSON.parse(text);
+          throw new Error(errorData.message || 'Erreur du serveur');
+        } catch (parseError) {
+          throw new Error('Erreur de format de réponse du serveur');
+        }
+      }
+
+      // Télécharger le fichier
+      const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', `${exportType}_export_${Date.now()}.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    }
+
+    toast.success(`Exportation ${format.toUpperCase()} réussie !`);
+    
+  } catch (error) {
+    console.error('[ERREUR EXECUTE EXPORT]', error);
+    
+    // Gestion spéciale des erreurs de réponse
+    if (error.response) {
+      const status = error.response.status;
+      console.log('[DEBUG] Status de l\'erreur:', status);
+      
+      if (status === 404) {
+        throw new Error(`L'endpoint d'export /api/export/${exportType}/${format} n'existe pas sur le serveur.`);
+      } else if (status === 500) {
+        // Pour les erreurs 500, essayer de lire le message
+        let errorMessage = 'Erreur interne du serveur lors de l\'export';
+        if (error.response.data) {
+          try {
+            if (error.response.data instanceof Blob) {
+              const text = await error.response.data.text();
+              const errorData = JSON.parse(text);
+              errorMessage = errorData.message || errorMessage;
+            } else if (typeof error.response.data === 'object') {
+              errorMessage = error.response.data.message || errorMessage;
+            }
+          } catch {
+            // Ignore parsing errors, use default message
+          }
+        }
+        throw new Error(errorMessage);
+      } else if (status === 401) {
+        throw new Error('Non autorisé - veuillez vous reconnecter');
+      } else if (status === 403) {
+        throw new Error('Accès refusé - permissions insuffisantes');
+      }
+    }
+    
+    throw error;
+  }
+};
   const handleDashboardExport = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -212,71 +382,6 @@ const ExportDataForm = ({ exportType, onExportComplete }) => {
     return lines.join('\n');
   };
 
-  const executeExport = async (url) => {
-    const token = localStorage.getItem('token');
-    
-    const headers = {
-      'Authorization': token ? `Bearer ${token}` : undefined
-    };
-
-    // Nettoyer les headers undefined
-    Object.keys(headers).forEach(key => headers[key] === undefined && delete headers[key]);
-
-    if (format === 'json') {
-      const response = await axios({
-        url,
-        method: 'GET',
-        headers: {
-          ...headers,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        timeout: 30000
-      });
-
-      let dataToExport = response.data;
-      if (response.data && response.data.data) {
-        dataToExport = response.data.data;
-      }
-
-      if (!dataToExport || (Array.isArray(dataToExport) && dataToExport.length === 0)) {
-        toast.warning('Aucune donnée trouvée');
-        return;
-      }
-
-      const jsonData = JSON.stringify(dataToExport, null, 2);
-      downloadFile(jsonData, 'application/json', `${exportType}_export_${Date.now()}.json`);
-
-    } else {
-      const response = await axios({
-        url,
-        method: 'GET',
-        responseType: 'blob',
-        headers: {
-          ...headers,
-          'Accept': format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        },
-        timeout: 30000
-      });
-
-      if (!response.data || response.data.size === 0) {
-        toast.warning('Aucune donnée trouvée dans le fichier exporté');
-        return;
-      }
-
-      const downloadUrl = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.setAttribute('download', `${exportType}_export_${Date.now()}.${format}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(downloadUrl);
-    }
-
-    toast.success(`Exportation ${format.toUpperCase()} réussie`);
-  };
-
   const downloadFile = (data, mimeType, filename) => {
     const blob = new Blob([data], { type: mimeType });
     const downloadUrl = window.URL.createObjectURL(blob);
@@ -301,22 +406,22 @@ const ExportDataForm = ({ exportType, onExportComplete }) => {
       console.error('[ERREUR RÉPONSE SERVEUR]', status, data);
 
       if (status === 404) {
-        errorMessage = data?.message || 'Aucune donnée trouvée pour les critères sélectionnés';
+        errorMessage = data?.message || `L'endpoint d'export pour ${exportType} n'existe pas. Vérifiez que la route API /api/export/${exportType}/${format} est définie sur votre serveur.`;
       } else if (status === 401) {
         errorMessage = 'Non autorisé - veuillez vous reconnecter';
       } else if (status === 403) {
         errorMessage = 'Accès refusé - permissions insuffisantes';
       } else if (status === 500) {
-        errorMessage = data?.message || 'Erreur interne du serveur';
+        errorMessage = data?.message || 'Erreur interne du serveur lors de l\'export';
       } else {
         errorMessage = `Erreur ${status}: ${data?.message || error.response.statusText}`;
       }
 
     } else if (error.request) {
       console.error('[ERREUR AUCUNE RÉPONSE]', error.request);
-      errorMessage = 'Aucune réponse du serveur - vérifiez votre connexion';
+      errorMessage = 'Aucune réponse du serveur - vérifiez que votre serveur backend est démarré et accessible';
     } else if (error.code === 'ECONNABORTED') {
-      errorMessage = 'La requête a expiré (timeout)';
+      errorMessage = 'La requête a expiré (timeout) - le serveur met trop de temps à répondre';
     } else {
       errorMessage = error.message;
     }
@@ -408,9 +513,8 @@ const ExportDataForm = ({ exportType, onExportComplete }) => {
               >
                 <option value="">Tous les rôles</option>
                 <option value="admin">Admin</option>
-                <option value="user">user</option>
-           
-                
+                <option value="user">User</option>
+                <option value="moderator">Moderator</option>
               </select>
             </div>
           </>

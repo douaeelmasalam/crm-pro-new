@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TicketDetails from './TicketDetails';
+import ExportDataForm from './ExportDataForm';
 import '../styles/TicketList.css';
 
 function TicketList() {
@@ -12,9 +13,8 @@ function TicketList() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [availableUsers, setAvailableUsers] = useState([]);
-  // const [selectedUserId, setSelectedUserId] = useState(null);
-const [selectedUser, setSelectedUser] = useState(null);  // will hold full user object
-
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -128,32 +128,30 @@ const [selectedUser, setSelectedUser] = useState(null);  // will hold full user 
     }
   };
 
-const filteredTickets = tickets.filter(ticket => {
-  const matchesSearch = (
-    ticket.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ticket.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ticket.clientConcerned?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ticket.ticketType?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleExportComplete = () => {
+    setShowExportModal(false);
+  };
 
-  console.log("Selected user:", selectedUser);
-  console.log("Assigned users for this ticket:", 
-    ticket.assignedUsers.map(user => `${user.name} (ID: ${user.id || user._id})`).join(", ")
-  );
+  const filteredTickets = tickets.filter(ticket => {
+    const matchesSearch = (
+      ticket.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.clientConcerned?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.ticketType?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-  const matchesStatus = filter === 'all' || ticket.status === filter;
+    console.log("Selected user:", selectedUser);
+    console.log("Assigned users for this ticket:", 
+      ticket.assignedUsers.map(user => `${user.name} (ID: ${user.id || user._id})`).join(", ")
+    );
 
-  // Here: check if selectedUser's name exists in ticket.assignedUsers
-  const matchesUser = !selectedUser || ticket.assignedUsers.some(user => user.name === selectedUser.name);
+    const matchesStatus = filter === 'all' || ticket.status === filter;
 
-  return matchesSearch && matchesStatus && matchesUser;
-});
+    // Here: check if selectedUser's name exists in ticket.assignedUsers
+    const matchesUser = !selectedUser || ticket.assignedUsers.some(user => user.name === selectedUser.name);
 
-
-
-
-
-
+    return matchesSearch && matchesStatus && matchesUser;
+  });
 
   const requestSort = (key) => {
     let direction = 'ascending';
@@ -187,6 +185,17 @@ const filteredTickets = tickets.filter(ticket => {
             className="create-ticket-btn"
           >
             + Create Ticket
+          </button>
+
+          <button 
+            onClick={() => setShowExportModal(true)}
+            className="export-btn"
+            title="Export tickets"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 10v2.667A1.333 1.333 0 0112.667 14H3.333A1.333 1.333 0 012 12.667V10M5.333 6.667L8 4l2.667 2.667M8 4v8" stroke="#64748B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Export
           </button>
           
           <div className="search-container">
@@ -222,26 +231,26 @@ const filteredTickets = tickets.filter(ticket => {
           </button>
         </div>
       </div>
+
       <div className="user-filter-container">
         <span className="filter-label">Filter by User:</span>
-<div className="user-bubbles">
-  {availableUsers.map(user => (
-    <div
-      key={user._id}
-      className={`user-bubble ${selectedUser?._id === user._id ? 'selected' : ''}`}
-      onClick={() => {
-        // Toggle selection: deselect if clicked again
-        setSelectedUser(prev => (prev?._id === user._id ? null : user));
-        console.log(`Selected user ID: ${user._id}, name: ${user.name}`);
-      }}
-      title={user.name}
-      style={{ cursor: 'pointer' }}
-    >
-      {user.name}
-    </div>
-  ))}
-</div>
-
+        <div className="user-bubbles">
+          {availableUsers.map(user => (
+            <div
+              key={user._id}
+              className={`user-bubble ${selectedUser?._id === user._id ? 'selected' : ''}`}
+              onClick={() => {
+                // Toggle selection: deselect if clicked again
+                setSelectedUser(prev => (prev?._id === user._id ? null : user));
+                console.log(`Selected user ID: ${user._id}, name: ${user.name}`);
+              }}
+              title={user.name}
+              style={{ cursor: 'pointer' }}
+            >
+              {user.name}
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="table-wrapper">
@@ -278,6 +287,30 @@ const filteredTickets = tickets.filter(ticket => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal d'exportation */}
+      {showExportModal && (
+        <div className="export-modal-overlay" onClick={() => setShowExportModal(false)}>
+          <div className="export-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="export-modal-header">
+              <h2>Export Tickets</h2>
+              <button 
+                className="export-modal-close" 
+                onClick={() => setShowExportModal(false)}
+                aria-label="Close export modal"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <ExportDataForm 
+              exportType="tickets" 
+              onExportComplete={handleExportComplete}
+            />
+          </div>
+        </div>
+      )}
 
       {selectedTicket && (
         <TicketDetails 
@@ -355,7 +388,7 @@ const TicketRow = ({ ticket, onView, onDelete }) => {
           {ticket.ticketType || 'N/A'}
         </span>
       </td>
-      {/* <td>
+      <td>
         {ticket.assignedUsers?.length > 0 ? 
           ticket.assignedUsers.map((user, index) => (
             <span key={index} className="assigned-user">
@@ -363,17 +396,7 @@ const TicketRow = ({ ticket, onView, onDelete }) => {
             </span>
           )) : 
           'Unassigned'}
-      </td> */}
-      <td>
-  {ticket.assignedUsers?.length > 0 ? 
-    ticket.assignedUsers.map((user, index) => (
-      <span key={index} className="assigned-user">
-        {getUserName(user)}
-      </span>
-    )) : 
-    'Unassigned'}
-</td>
-
+      </td>
       <td>
         <span className={`priority-badge ${getPriorityClass(ticket.priority)}`}>
           {ticket.priority === 'faible' ? 'Low' :

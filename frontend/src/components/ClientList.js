@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaSort, FaFilter, FaChevronDown, FaChevronUp, FaTimes, FaSave } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaSort, FaFilter, FaChevronDown, FaChevronUp, FaTimes, FaSave, FaDownload, FaFileExcel, FaFileCsv, FaFileCode } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ClientForm from './ClientForm';
@@ -27,6 +27,15 @@ const ClientList = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+
+  // États pour l'exportation
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportFilters, setExportFilters] = useState({
+    status: '',
+    startDate: '',
+    endDate: ''
+  });
 
   const initialClientData = {
     // Informations de base
@@ -155,6 +164,52 @@ const ClientList = () => {
     }
   };
 
+  // Fonctions d'exportation
+  const handleExport = (format) => {
+    setShowExportModal(false);
+    setExportLoading(true);
+    
+    const queryParams = new URLSearchParams();
+    
+    // Ajouter les filtres d'exportation
+    if (exportFilters.status) queryParams.append('status', exportFilters.status);
+    if (exportFilters.startDate) queryParams.append('startDate', exportFilters.startDate);
+    if (exportFilters.endDate) queryParams.append('endDate', exportFilters.endDate);
+    
+    const url = `http://localhost:5000/api/export/clients/${format}?${queryParams.toString()}`;
+    
+    // Créer un lien temporaire pour télécharger le fichier
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `clients_export_${new Date().toISOString().split('T')[0]}.${format}`;
+    
+    // Ajouter le lien au DOM, cliquer dessus, puis le supprimer
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Simuler un délai pour l'UX
+    setTimeout(() => {
+      setExportLoading(false);
+    }, 2000);
+  };
+
+  const handleExportFilterChange = (e) => {
+    const { name, value } = e.target;
+    setExportFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const resetExportFilters = () => {
+    setExportFilters({
+      status: '',
+      startDate: '',
+      endDate: ''
+    });
+  };
+
   const handleEdit = (client) => {
     setSelectedClient(client);
     setEditFormData({ ...initialClientData, ...client });
@@ -229,6 +284,7 @@ const ClientList = () => {
   const handleCloseModal = () => {
     setShowViewModal(false);
     setShowEditModal(false);
+    setShowExportModal(false);
     setSelectedClient(null);
     setEditFormData({});
   };
@@ -317,6 +373,10 @@ const ClientList = () => {
           <button className="filter-button" onClick={toggleFilters}>
             <FaFilter /> Filtres {showFilters ? <FaChevronUp /> : <FaChevronDown />}
           </button>
+
+          <button className="export-button" onClick={() => setShowExportModal(true)}>
+            <FaDownload /> Exporter
+          </button>
           
           <button className="add-button" onClick={handleAddNew}>
             <FaPlus /> Ajouter un client
@@ -361,6 +421,12 @@ const ClientList = () => {
       )}
       
       {error && <div className="alert alert-error">{error}</div>}
+      
+      {exportLoading && (
+        <div className="export-loading">
+          <p>Exportation en cours...</p>
+        </div>
+      )}
       
       {loading ? (
         <div className="loading">Chargement des clients...</div>
@@ -445,6 +511,98 @@ const ClientList = () => {
       <div className="client-list-footer">
         <p>Total: {filteredClients.length} clients</p>
       </div>
+
+      {/* Modal d'exportation */}
+      {showExportModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h2>Exporter les clients</h2>
+              <button className="modal-close" onClick={handleCloseModal}>
+                <FaTimes />
+              </button>
+            </div>
+            <div className="modal-content">
+              <div className="export-options">
+                <h3>Options d'exportation</h3>
+                
+                <div className="export-filters">
+                  <div className="filter-group">
+                    <label>Statut</label>
+                    <select 
+                      name="status" 
+                      value={exportFilters.status}
+                      onChange={handleExportFilterChange}
+                    >
+                      <option value="">Tous les statuts</option>
+                      <option value="actif">Actif</option>
+                      <option value="inactif">Inactif</option>
+                      <option value="prospect">Prospect</option>
+                    </select>
+                  </div>
+                  
+                  <div className="filter-group">
+                    <label>Date de début</label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={exportFilters.startDate}
+                      onChange={handleExportFilterChange}
+                    />
+                  </div>
+                  
+                  <div className="filter-group">
+                    <label>Date de fin</label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={exportFilters.endDate}
+                      onChange={handleExportFilterChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="export-formats">
+                  <h4>Choisir le format d'export :</h4>
+                  
+                  <div className="format-buttons">
+                    <button 
+                      className="format-button csv" 
+                      onClick={() => handleExport('csv')}
+                      title="Exporter en CSV"
+                    >
+                      <FaFileCsv /> CSV
+                    </button>
+                    
+                    <button 
+                      className="format-button excel" 
+                      onClick={() => handleExport('xlsx')}
+                      title="Exporter en Excel"
+                    >
+                      <FaFileExcel /> Excel
+                    </button>
+                    
+                    <button 
+                      className="format-button json" 
+                      onClick={() => handleExport('json')}
+                      title="Exporter en JSON"
+                    >
+                      <FaFileCode /> JSON
+                    </button>
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-close" onClick={handleCloseModal}>
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal pour visualiser un client */}
       {showViewModal && selectedClient && (
@@ -585,7 +743,7 @@ const ClientList = () => {
                     {renderFormField('Régime TVA', 'regimeTVABilan', 'select', ['Réel normal', 'Réel simplifié', 'Franchise'])}
                     {renderFormField('Régime IS', 'regimeISBilan', 'select', ['Réel normal', 'Réel simplifié'])}
                     {renderFormField('Date de début', 'dateDebut', 'date')}
-                    {renderFormField('Date de fin', 'dateFin', 'date')}
+                    {renderFormField('Date de fin', 'dateFin','date')}
                     {renderFormField('Date d\'échéance', 'dateEcheance', 'date')}
                     {renderFormField('Totale bilan', 'totalieBilan')}
                     {renderFormField('Chiffre d\'affaire', 'chiffreAffaire')}
