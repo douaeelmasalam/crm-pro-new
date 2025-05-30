@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Search, X } from "lucide-react";
-import { FaDownload } from 'react-icons/fa';
+import { Search, X, Download } from "lucide-react";
 import '../styles/UserList.css';
 import EditUserForm from './EditUserForm';
 import ExportDataForm from './ExportDataForm';
@@ -114,8 +113,8 @@ const UserList = () => {
       
       {/* Modal d'exportation */}
       {showExportModal && (
-        <div className="export-modal-overlay">
-          <div className="export-modal">
+        <div className="export-modal-overlay" onClick={handleCloseExportModal}>
+          <div className="export-modal" onClick={(e) => e.stopPropagation()}>
             <div className="export-modal-header">
               <h3 className="export-modal-title">Exporter les utilisateurs</h3>
               <button 
@@ -127,7 +126,10 @@ const UserList = () => {
               </button>
             </div>
             <div className="export-modal-content">
-              <ExportDataForm exportType="users" />
+              <ExportDataForm 
+                exportType="users" 
+                onExportComplete={handleCloseExportModal}
+              />
             </div>
           </div>
         </div>
@@ -172,7 +174,8 @@ const UserList = () => {
             className="export-button"
             title="Exporter les utilisateurs"
           >
-            <FaDownload />  Exporter  users
+            <Download size={16} />
+            Exporter
           </button>
         </div>
       </div>
@@ -244,10 +247,17 @@ const UserList = () => {
           font-weight: 500;
           transition: background-color 0.2s;
           margin-left: 10px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
         
         .export-button:hover {
           background-color: #388E3C;
+        }
+        
+        .export-button:active {
+          transform: translateY(1px);
         }
         
         /* Styles pour le modal d'exportation */
