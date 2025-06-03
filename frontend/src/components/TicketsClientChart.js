@@ -12,6 +12,10 @@ const TicketsClientChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
   const [clientMetrics, setClientMetrics] = useState({});
   const [debugInfo, setDebugInfo] = useState({});
   const [showDebug, setShowDebug] = useState(false);
+  
+  // États pour la pagination des cards
+  const [currentPage, setCurrentPage] = useState(0);
+  const cardsPerPage = 6 ;
 
   // Couleurs pour les différents statuts
   const statusColors = {
@@ -204,6 +208,30 @@ const processTicketsByClient = () => {
     }));
   };
 
+  // Fonctions pour la pagination des cards
+  const getSortedClientMetrics = () => {
+    return Object.entries(clientMetrics).sort(([,a], [,b]) => b.total - a.total);
+  };
+
+  const getPaginatedClients = () => {
+    const sortedClients = getSortedClientMetrics();
+    const startIndex = currentPage * cardsPerPage;
+    const endIndex = startIndex + cardsPerPage;
+    return sortedClients.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = () => {
+    return Math.ceil(Object.keys(clientMetrics).length / cardsPerPage);
+  };
+
+  const goToPreviousPage = () => {
+    setCurrentPage(prev => Math.max(0, prev - 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(getTotalPages() - 1, prev + 1));
+  };
+
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -237,15 +265,15 @@ const processTicketsByClient = () => {
 
   const DebugPanel = () => (
     <div className="debug-panel">
-      <h4>🔍 Informations de Debug</h4>
+      <h4>Informations de Debug</h4>
       <div className="debug-grid">
-        <div>📊 Tickets récupérés: {debugInfo.ticketsCount || 0}</div>
+        <div>Tickets récupérés: {debugInfo.ticketsCount || 0}</div>
         <div> Clients récupérés: {debugInfo.clientsCount || 0}</div>
         <div> Type clients data: {debugInfo.clientsDataType || 'undefined'}</div>
         <div> Tickets traités: {debugInfo.processedTicketsCount || 0}</div>
         <div> Tickets non appariés: {debugInfo.unmatchedTicketsCount || 0}</div>
         <div> Mappings clients: {debugInfo.clientMappingCount || 0}</div>
-        <div>📈 Points de données: {debugInfo.chartDataLength || 0}</div>
+        <div> Points de données: {debugInfo.chartDataLength || 0}</div>
       </div>
       {debugInfo.sampleTicket && (
         <details className="debug-details">
@@ -265,7 +293,7 @@ const processTicketsByClient = () => {
   if (loading) {
     return (
       <div className="loading-container">
-        Chargement des données...
+         Chargement des données...
       </div>
     );
   }
@@ -276,7 +304,7 @@ const processTicketsByClient = () => {
         <div className="error-container">
           <div>{error}</div>
           <button className="retry-button" onClick={fetchData}>
-            Réessayer
+             Réessayer
           </button>
         </div>
         {showDebug && <DebugPanel />}
@@ -290,7 +318,7 @@ const processTicketsByClient = () => {
         <div className="no-data-container">
           <div>❌ Aucune donnée disponible</div>
           <button className="retry-button" onClick={fetchData}>
-            Recharger les données
+             Recharger les données
           </button>
         </div>
         {showDebug && <DebugPanel />}
@@ -325,93 +353,121 @@ const processTicketsByClient = () => {
       </div>
 
       <div className="client-metrics-section">
-        <h3>📈 Résumé par Client</h3>
+        <div className="metrics-header">
+          <h3> Résumé par Client</h3>
+          <div className="pagination-info">
+            Page {currentPage + 1} sur {getTotalPages()} 
+            ({Object.keys(clientMetrics).length} clients au total)
+          </div>
+        </div>
+        
         <div className="client-metrics-container">
           <div className="client-metrics-wrapper">
-            {Object.entries(clientMetrics)
-              .sort(([,a], [,b]) => b.total - a.total)
-              .map(([clientName, metrics]) => (
-                <ClientMetricsCard 
-                  key={clientName} 
-                  clientName={clientName} 
-                  metrics={metrics} 
-                />
-              ))}
+            {getPaginatedClients().map(([clientName, metrics]) => (
+              <ClientMetricsCard 
+                key={clientName} 
+                clientName={clientName} 
+                metrics={metrics} 
+              />
+            ))}
           </div>
+          
+          {getTotalPages() > 1 && (
+            <div className="pagination-controls">
+              <button 
+                onClick={goToPreviousPage}
+                disabled={currentPage === 0}
+                className="pagination-button"
+              >
+                ⬅️ Précédent
+              </button>
+              <span className="pagination-status">
+                {currentPage + 1} / {getTotalPages()}
+              </span>
+              <button 
+                onClick={goToNextPage}
+                disabled={currentPage >= getTotalPages() - 1}
+                className="pagination-button"
+              >
+                Suivant ➡️
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="main-content">
-        <div className="chart-container">
-          {chartType === 'bar' ? (
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart data={getBarChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="client" 
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  interval={0}
-                />
-                <YAxis 
-                  domain={[0, 'dataMax + 1']}
-                  allowDecimals={false}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                {Object.keys(statusColors).map(status => (
-                  <Bar 
-                    key={status}
-                    dataKey={status} 
-                    fill={statusColors[status]}
-                    name={status}
+        <div className="chart-section">
+          <div className="chart-container">
+            {chartType === 'bar' ? (
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={getBarChartData()} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="client" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    interval={0}
                   />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <ResponsiveContainer width="100%" height={400}>
-              <PieChart>
-                <Pie
-                  data={getPieChartData()}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {getPieChartData().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  <YAxis 
+                    domain={[0, 'dataMax + 1']}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  {Object.keys(statusColors).map(status => (
+                    <Bar 
+                      key={status}
+                      dataKey={status} 
+                      fill={statusColors[status]}
+                      name={status}
+                    />
                   ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`${value} ticket(s)`, 'Quantité']} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <ResponsiveContainer width="100%" height={400}>
+                <PieChart>
+                  <Pie
+                    data={getPieChartData()}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {getPieChartData().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value} ticket(s)`, 'Quantité']} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
         </div>
 
-        <div className="table-container">
-          <h3> Données Détaillées</h3>
-          <div className="table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Client</th>
-                  <th>Ouvert</th>
-                  <th>En Cours</th>
-                  <th>Résolu</th>
-                  <th>Fermé</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(clientMetrics)
-                  .sort(([,a], [,b]) => b.total - a.total)
-                  .map(([clientName, metrics]) => (
+        {chartType === 'bar' && (
+          <div className="table-container">
+            <h3> Données Détaillées</h3>
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Ouvert</th>
+                    <th>En Cours</th>
+                    <th>Résolu</th>
+                    <th>Fermé</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getSortedClientMetrics().map(([clientName, metrics]) => (
                     <tr key={clientName}>
                       <td title={clientName}>{clientName}</td>
                       <td>{metrics['Ouvert']}</td>
@@ -421,10 +477,11 @@ const processTicketsByClient = () => {
                       <td>{metrics.total}</td>
                     </tr>
                   ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

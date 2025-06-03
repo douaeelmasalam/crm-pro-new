@@ -60,13 +60,15 @@ function Login({ setIsLoggedIn, setUserRole, setMessage, message, setUserPermiss
 
         // Définir les états dans App.js avec un délai pour l'UX
         setTimeout(() => {
-          setUserRole(data.role);
-          if (setUserPermissions && data.user?.permissions) {
-            setUserPermissions(data.user.permissions);
-          }
-          setIsLoggedIn(true);
-          setIsLoading(false);
-        }, 1000);
+    setUserRole(data.role);
+    if (setUserPermissions && data.user?.permissions) {
+      setUserPermissions(data.user.permissions);
+    }
+    setIsLoggedIn(true);
+    setIsLoading(false);
+    window.location.href = '/dashboard'; // Redirection explicite
+  }, 1000);
+
 
       } else {
         console.warn('[LOGIN] Échec :', data.message);
@@ -127,10 +129,6 @@ function Login({ setIsLoggedIn, setUserRole, setMessage, message, setUserPermiss
               borderRadius: '5px',
               marginBottom: '20px'
             }}>
-              <div></div>
-              <div style={{ fontSize: '12px', marginTop: '5px' }}>
-                Vérification des identifiants
-              </div>
             </div>
           )}
 

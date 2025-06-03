@@ -16,6 +16,7 @@ import TicketEvolutionForecastChart from '../components/TicketEvolutionForecastC
 import ExportDataForm from '../components/ExportDataForm';
 import TicketsClientChart from '../components/TicketsClientChart';
 import TicketsByUserChart from '../components/TicketsByUserChart';
+import DocumentsSection from '../components/DocumentsSection';
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -656,8 +657,9 @@ const AdminDashboard = ({ userRole: propUserRole, userPermissions: propUserPermi
       );
       case 'documents': return (
         <div>
-          <h2>Documents</h2>
-          <p>Document management will be implemented here.</p>
+        
+         
+           <DocumentsSection />
         </div>
       );
       default: return <div>Select a section</div>;

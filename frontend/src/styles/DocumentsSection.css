@@ -1,0 +1,339 @@
+/* styles/DocumentsSection.css */
+
+.documents-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.documents-section h1 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  text-align: center;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 15px;
+}
+
+.documents-section h2 {
+  color: #34495e;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.documents-section h2::before {
+  content: "📁";
+  font-size: 1.5rem;
+}
+
+/* Section de téléchargement */
+.mb-5 {
+  margin-bottom: 3rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.card {
+  background: white;
+  border: none;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.p-3 {
+  padding: 1.5rem !important;
+}
+
+/* Boutons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2980b9, #1f639a);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+}
+
+.btn-success:hover {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.me-2 {
+  margin-right: 0.5rem !important;
+}
+
+/* Texte et alertes */
+.text-muted {
+  color: #6c757d !important;
+  font-style: italic;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.fw-bold {
+  font-weight: 700 !important;
+}
+
+.alert {
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  border: none;
+  font-weight: 500;
+}
+
+.alert-danger {
+  background: linear-gradient(135deg, #ffe6e6, #ffcccc);
+  color: #721c24;
+  border-left: 4px solid #e74c3c;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #e8f5e8, #d4edda);
+  color: #155724;
+  border-left: 4px solid #2ecc71;
+}
+
+.alert-info {
+  background: linear-gradient(135deg, #e6f3ff, #cce7ff);
+  color: #0c5460;
+  border-left: 4px solid #3498db;
+}
+
+/* Liste des documents */
+.list-group {
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.list-group-item {
+  background: white;
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  transform: translateX(5px);
+  border-left: 4px solid #3498db;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+.d-flex {
+  display: flex !important;
+}
+
+.justify-content-between {
+  justify-content: space-between !important;
+}
+
+.align-items-center {
+  align-items: center !important;
+}
+
+.flex-column {
+  flex-direction: column !important;
+}
+
+/* Animation du spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Input file personnalisé */
+input[type="file"] {
+  display: none;
+}
+
+label[for="file-upload"] {
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+label[for="file-upload"]:hover {
+  background: linear-gradient(135deg, #2980b9, #1f639a);
+}
+
+/* Informations du document */
+.list-group-item .d-flex.flex-column span {
+  margin-bottom: 5px;
+}
+
+.list-group-item .d-flex.flex-column small {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .documents-section {
+    padding: 15px;
+  }
+  
+  .documents-section h1 {
+    font-size: 2rem;
+  }
+  
+  .card {
+    margin-bottom: 20px;
+  }
+  
+  .list-group-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 15px;
+  }
+  
+  .list-group-item > div:last-child {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  .btn-sm {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .documents-section h1 {
+    font-size: 1.8rem;
+  }
+  
+  .btn {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .list-group-item > div:last-child {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-sm {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Animations d'entrée */
+.documents-section {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-group-item {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Effet de focus pour l'accessibilité */
+.btn:focus {
+  outline: 3px solid rgba(52, 152, 219, 0.3);
+  outline-offset: 2px;
+}
+
+/* Style pour les fichiers sélectionnés */
+.text-muted.file-count {
+  background: #e9ecef;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.9rem;
+}

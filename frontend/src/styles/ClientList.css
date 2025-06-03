@@ -193,12 +193,9 @@
   background-color: #f3f4f6;
 }
 
-.action-button.view {
-  color: #3b82f6;
-}
 
 .action-button.edit {
-  color: #f59e0b;
+  color: #0b3af5;
 }
 
 .action-button.delete {

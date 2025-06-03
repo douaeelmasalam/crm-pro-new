@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../Models/User'); // Ajustez le chemin selon votre structure
-const Ticket = require('../models/Ticket');
-const Prospect = require('../models/Prospect');
-const Document = require('../models/Document');
-const Client = require('../models/Client');
+const Ticket = require('../Models/Ticket');
+const Prospect = require('../Models/Prospect');
+const Document = require('../Models/Document');
+const Client = require('../Models/Client');
 
 // Middleware d'authentification
 const authenticateToken = require('../middlewares/auth');

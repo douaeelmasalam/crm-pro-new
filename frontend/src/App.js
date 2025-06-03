@@ -162,33 +162,23 @@ function App() {
       <Routes>
         {/* Page d'accueil - toujours afficher login si pas connecté */}
         <Route 
-          path="/" 
-          element={
-            isLoggedIn ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          } 
-        />
+  path="/" 
+  element={<Navigate to="/login" replace />} 
+/>
         
         {/* Page de connexion */}
-        <Route 
-          path="/login" 
-          element={
-            isLoggedIn ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Login 
-                setIsLoggedIn={setIsLoggedIn} 
-                setUserRole={setUserRole} 
-                setMessage={setMessage} 
-                message={message}
-                setUserPermissions={setUserPermissions}
-              />
-            )
-          } 
-        />
+      <Route 
+  path="/login" 
+  element={
+    <Login 
+      setIsLoggedIn={setIsLoggedIn} 
+      setUserRole={setUserRole} 
+      setMessage={setMessage} 
+      message={message}
+      setUserPermissions={setUserPermissions}
+    />
+  } 
+/>
         
         {/* Dashboard unifié qui s'adapte selon le rôle */}
         <Route 

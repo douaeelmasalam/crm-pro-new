@@ -1,0 +1,48 @@
+RAPPORT DASHBOARD CRM
+Date d'export,03/06/2025
+Période,Toutes les dates - Toutes les dates
+
+STATISTIQUES GÉNÉRALES
+Métrique,Valeur
+Nombre d'utilisateurs,7
+Nombre de clients,10
+Nombre de prospects,6
+Total tickets,31
+Tickets ouverts,16
+Tickets en cours,1
+Tickets résolus,12
+Tickets fermés,2
+
+DÉTAIL DES TICKETS
+ID,Titre,Statut,Priorité,Client,Date de création
+683ecae9dd8246ce2dc34ac7,"hbgy",ouvert,faible,,2025-06-03T10:14:01.454Z
+683ecadddd8246ce2dc34ac5,"kjhihu",ouvert,faible,,2025-06-03T10:13:49.217Z
+683e3bd404eb4fa8a9033e96,"ujhiu",résolu,faible,,2025-06-03T00:03:32.193Z
+683e3acf04eb4fa8a9033e70,"b;ugug",résolu,faible,,2025-06-02T23:59:11.922Z
+683e2aa7bfe971c9f2b65aae,"h'iuy",résolu,moyenne,,2025-06-02T22:50:15.687Z
+683db3ee7a32baacf7026f43,"hyy8y8",résolu,critique,,2025-06-02T14:23:42.129Z
+683db3e17a32baacf7026f41,"uhuohyohy",résolu,moyenne,,2025-06-02T14:23:29.747Z
+683d94327a32baacf7026e5b,"eeeeeeeeeeeeeee",résolu,faible,,2025-06-02T12:08:18.180Z
+683d8fda6ce444a3430751f8,"uhyuhy",résolu,moyenne,,2025-06-02T11:49:46.088Z
+683c6d1d551d13a4647fe3db,"hhy",ouvert,critique,,2025-06-01T15:09:17.688Z
+683b20b01dbba9f377f91825,"huhyu",ouvert,faible,,2025-05-31T15:30:56.736Z
+683b1fe41dbba9f377f916eb,"nasser",résolu,élevée,,2025-05-31T15:27:32.970Z
+683abdaf8d89bb056a01c188,"vgyhg",ouvert,moyenne,,2025-05-31T08:28:31.883Z
+683abd8a8d89bb056a01c174,"fgf",fermé,faible,,2025-05-31T08:27:54.922Z
+6839d5c40cc226e700b563ba,"huoh",résolu,moyenne,,2025-05-30T15:59:00.514Z
+6839bcfddc26b38999ad9327,"nuh8",fermé,élevée,,2025-05-30T14:13:17.865Z
+6839bcd2dc26b38999ad9300,"huhyuj",ouvert,faible,,2025-05-30T14:12:34.750Z
+6838ee056486961b60f6672c,"ughuh",ouvert,élevée,,2025-05-29T23:30:13.808Z
+6838edd56486961b60f66716,"niohy",ouvert,faible,,2025-05-29T23:29:25.016Z
+6838edbe6486961b60f666ef,"gbuj",ouvert,faible,,2025-05-29T23:29:02.958Z
+68387c8c8513b0586eb81d7b,"huh",ouvert,faible,,2025-05-29T15:26:04.240Z
+683875168513b0586eb81d1c,"jij",en cours,élevée,,2025-05-29T14:54:14.124Z
+683874e68513b0586eb81d08,"jkij",ouvert,faible,,2025-05-29T14:53:26.339Z
+683874348513b0586eb81c0e," bn b",ouvert,élevée,,2025-05-29T14:50:28.823Z
+683874048513b0586eb81bb8,"bgh",ouvert,faible,,2025-05-29T14:49:40.104Z
+683873d08513b0586eb81b80,"JNJN",ouvert,élevée,,2025-05-29T14:48:48.467Z
+683873c48513b0586eb81b7e,"K",ouvert,critique,,2025-05-29T14:48:36.066Z
+6838738f8513b0586eb81b0b,"H'UH",ouvert,faible,,2025-05-29T14:47:43.627Z
+683873858513b0586eb81b09,"UH",résolu,moyenne,,2025-05-29T14:47:33.673Z
+683873518513b0586eb81ab1,"TVA2",résolu,moyenne,,2025-05-29T14:46:41.106Z
+683873208513b0586eb81a88,"TVA",résolu,élevée,,2025-05-29T14:45:52.284Z

@@ -14,6 +14,7 @@ const ticketRoutes = require('./Routes/ticket');
 const subTicketRoutes = require('./Routes/subTicketRoutes');
 const clientRoutes = require('./Routes/clientRoutes');
 const exportRoutes = require('./Routes/exportRoutes');
+const apiRoutes = require('./Routes/api');
 
 // Middleware de gestion des erreurs
 const errorHandler = require('./Middleware/errorHandler');
@@ -52,6 +53,8 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/subtickets', subTicketRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/export', exportRoutes);
+app.use('/api', apiRoutes); 
+
 
 // Route tableau de bord
 app.get('/api/dashboard', (req, res) => {

@@ -24,6 +24,7 @@
     "mathjs": "^14.4.0",
     "mongoose": "^8.13.2",
     "morgan": "^1.10.0",
+    "multer": "^2.0.0",
     "react": "^19.1.0",
     "react-datepicker": "^8.3.0",
     "react-dom": "^19.1.0",

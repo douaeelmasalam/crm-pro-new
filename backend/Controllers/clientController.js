@@ -44,7 +44,9 @@ exports.getClientsForSelect = async (req, res) => {
 // Récupérer un client par ID
 exports.getClientById = async (req, res) => {
   try {
-    const client = await Client.findById(req.params.id);
+    const client = await Client.findById(req.params.id)
+      .select('-__v') // Exclure le champ __v
+      .lean(); // Convertir en objet JavaScript simple
     
     if (!client) {
       return res.status(404).json({
@@ -53,7 +55,20 @@ exports.getClientById = async (req, res) => {
       });
     }
     
-    res.status(200).json(client);
+    // Aplatir la structure pour le frontend
+    const flattenedClient = {
+      ...client,
+      ...client.ficheClient,
+      // Si vous avez besoin des premiers bilans/organismes
+      ...(client.bilans?.length > 0 ? client.bilans[0] : {}),
+      ...(client.organismes?.length > 0 ? client.organismes[0] : {})
+    };
+    
+    delete flattenedClient.ficheClient;
+    delete flattenedClient.bilans;
+    delete flattenedClient.organismes;
+    
+    res.status(200).json(flattenedClient);
   } catch (error) {
     return handleError(error, res);
   }

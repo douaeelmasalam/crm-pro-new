@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
 const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
- 
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -9,7 +9,7 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
   const [showModal, setShowModal] = useState(false);
   const [userLines, setUserLines] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 3; // Nombre de cercles par page
+  const itemsPerPage = 5 ; // Nombre de cercles par page
 
   // Couleurs pour les différents utilisateurs
   const colors = [
@@ -211,6 +211,40 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
 
     setChartData(chartDataArray);
     setUserLines(userLinesData);
+  };
+
+  const calculateGlobalStats = () => {
+    if (userLines.length === 0) return null;
+    
+    const totalTickets = userLines.reduce((sum, user) => sum + user.totalTickets, 0);
+    const totalCompleted = userLines.reduce((sum, user) => sum + user.completedTickets, 0);
+    const totalUsers = userLines.length;
+    
+    // Calculer les priorités et statuts
+    const allTickets = userLines.flatMap(user => user.userData.tickets);
+    const priorityStats = {
+      critique: allTickets.filter(t => t.priority === 'critique').length,
+      élevée: allTickets.filter(t => t.priority === 'élevée').length,
+      moyenne: allTickets.filter(t => t.priority === 'moyenne').length,
+      faible: allTickets.filter(t => t.priority === 'faible').length
+    };
+    
+    const statusStats = {
+      ouvert: allTickets.filter(t => t.status === 'ouvert').length,
+      'en cours': allTickets.filter(t => t.status === 'en cours').length,
+      résolu: allTickets.filter(t => t.status === 'résolu').length,
+      fermé: allTickets.filter(t => t.status === 'fermé').length
+    };
+    
+    return {
+      totalTickets,
+      totalCompleted,
+      totalUsers,
+      completionRate: totalTickets > 0 ? (totalCompleted / totalTickets) * 100 : 0,
+      priorityStats,
+      statusStats,
+      allTickets
+    };
   };
 
   const getUserName = (user) => {
@@ -419,6 +453,194 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
     );
   };
 
+  const GlobalSummaryCircle = ({ globalStats, size = 160 }) => {
+    if (!globalStats) return null;
+    
+    const { totalTickets, totalCompleted, totalUsers, completionRate } = globalStats;
+    const radius = (size - 20) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDasharray = circumference;
+    const strokeDashoffset = circumference - (completionRate / 100) * circumference;
+
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        cursor: 'pointer',
+        padding: '20px',
+        borderRadius: '16px',
+        transition: 'all 0.3s ease',
+        backgroundColor: 'white',
+        border: '3px solid #e0e0e0',
+        minWidth: '200px',
+        position: 'relative',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'
+      }}
+      onClick={() => {
+        setSelectedPoint({
+          userName: 'Résumé Global',
+          date: new Date().toISOString().split('T')[0],
+          ticketCount: totalTickets,
+          tickets: globalStats.allTickets,
+          isGlobalSummary: true,
+          globalStats: globalStats
+        });
+        setShowModal(true);
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)';
+      }}>
+        
+        {/* Dégradé coloré en haut */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '6px',
+          background: 'linear-gradient(90deg, #8884d8, #82ca9d, #ffc658, #ff7300)',
+          borderRadius: '13px 13px 0 0'
+        }} />
+        
+        <h4 style={{
+          margin: '0 0 16px 0',
+          color: '#333',
+          fontSize: '16px',
+          fontWeight: '700',
+          textAlign: 'center'
+        }}>
+          Résumé Global
+        </h4>
+        
+        <div style={{ position: 'relative', marginBottom: '16px' }}>
+          <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+            {/* Cercle de fond */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="#f0f0f0"
+              strokeWidth="12"
+              fill="transparent"
+            />
+            {/* Cercle de progression */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="url(#gradient)"
+              strokeWidth="12"
+              fill="transparent"
+              strokeDasharray={strokeDasharray}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              style={{
+                transition: 'stroke-dashoffset 1s ease-in-out',
+                filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.2))'
+              }}
+            />
+            {/* Dégradé pour le cercle */}
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#8884d8" />
+                <stop offset="33%" stopColor="#82ca9d" />
+                <stop offset="66%" stopColor="#ffc658" />
+                <stop offset="100%" stopColor="#ff7300" />
+              </linearGradient>
+            </defs>
+          </svg>
+          
+          {/* Texte au centre */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '28px',
+              fontWeight: 'bold',
+              color: '#333',
+              marginBottom: '2px'
+            }}>
+              {totalTickets}
+            </div>
+            <div style={{
+              fontSize: '12px',
+              color: '#666',
+              fontWeight: '600'
+            }}>
+              TICKETS
+            </div>
+          </div>
+        </div>
+        
+        {/* Statistiques en bas */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '12px',
+          width: '100%',
+          fontSize: '12px'
+        }}>
+          <div style={{
+            textAlign: 'center',
+            padding: '8px',
+            backgroundColor: 'rgba(136, 132, 216, 0.1)',
+            borderRadius: '6px',
+            border: '1px solid rgba(136, 132, 216, 0.2)'
+          }}>
+            <div style={{ fontWeight: 'bold', color: '#8884d8', fontSize: '16px' }}>
+              {totalUsers}
+            </div>
+            <div style={{ color: '#666', fontSize: '10px' }}>
+              Utilisateurs
+            </div>
+          </div>
+          
+          <div style={{
+            textAlign: 'center',
+            padding: '8px',
+            backgroundColor: 'rgba(130, 202, 157, 0.1)',
+            borderRadius: '6px',
+            border: '1px solid rgba(130, 202, 157, 0.2)'
+          }}>
+            <div style={{ fontWeight: 'bold', color: '#82ca9d', fontSize: '16px' }}>
+              {totalCompleted}
+            </div>
+            <div style={{ color: '#666', fontSize: '10px' }}>
+              Terminés
+            </div>
+          </div>
+          
+          <div style={{
+            textAlign: 'center',
+            padding: '8px',
+            backgroundColor: 'rgba(255, 198, 88, 0.1)',
+            borderRadius: '6px',
+            border: '1px solid rgba(255, 198, 88, 0.2)',
+            gridColumn: '1 / -1'
+          }}>
+            <div style={{ fontWeight: 'bold', color: '#ffc658', fontSize: '16px' }}>
+              {Math.round(completionRate)}%
+            </div>
+            <div style={{ color: '#666', fontSize: '10px' }}>
+              Taux de Completion
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Tooltip personnalisé
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -499,7 +721,7 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
             paddingBottom: '16px'
           }}>
             <h3 style={{ margin: 0, color: '#333' }}>
-              Tickets de {selectedPoint.userName}
+              {selectedPoint.isGlobalSummary ? 'Résumé Global' : `Tickets de ${selectedPoint.userName}`}
             </h3>
             <button 
               style={{
@@ -522,12 +744,42 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
           </div>
           
           <div style={{ marginBottom: '20px' }}>
-            <p style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#555' }}>
-              <strong>Date:</strong> {new Date(selectedPoint.date).toLocaleDateString('fr-FR')}
-            </p>
-            <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#555' }}>
-              <strong>Nombre total de tickets:</strong> {selectedPoint.ticketCount}
-            </p>
+            {selectedPoint.isGlobalSummary ? (
+              <div>
+                <p style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#555' }}>
+                  <strong>Vue d'ensemble de tous les tickets</strong>
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                    <strong>Priorités:</strong>
+                    <div style={{ fontSize: '12px', marginTop: '4px' }}>
+                      <div>Critique: {selectedPoint.globalStats.priorityStats.critique}</div>
+                      <div>Élevée: {selectedPoint.globalStats.priorityStats.élevée}</div>
+                      <div>Moyenne: {selectedPoint.globalStats.priorityStats.moyenne}</div>
+                      <div>Faible: {selectedPoint.globalStats.priorityStats.faible}</div>
+                    </div>
+                  </div>
+                  <div style={{ padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                    <strong>Statuts:</strong>
+                    <div style={{ fontSize: '12px', marginTop: '4px' }}>
+                      <div>Ouvert: {selectedPoint.globalStats.statusStats.ouvert}</div>
+                      <div>En cours: {selectedPoint.globalStats.statusStats['en cours']}</div>
+                      <div>Résolu: {selectedPoint.globalStats.statusStats.résolu}</div>
+                      <div>Fermé: {selectedPoint.globalStats.statusStats.fermé}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#555' }}>
+                  <strong>Date:</strong> {new Date(selectedPoint.date).toLocaleDateString('fr-FR')}
+                </p>
+                <p style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#555' }}>
+                  <strong>Nombre total de tickets:</strong> {selectedPoint.ticketCount}
+                </p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -753,124 +1005,144 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
         </div>
 
         {/* Cercles interactifs horizontaux avec navigation */}
-        <div style={{ 
-          marginTop: '20px',
-          backgroundColor: 'white',
-          border: '1px solid #dee2e6',
-          borderRadius: '8px',
-          padding: '20px'
+  
+<div style={{ 
+  marginTop: '20px',
+  backgroundColor: 'white',
+  border: '1px solid #dee2e6',
+  borderRadius: '8px',
+  padding: '20px'
+}}>
+  <div style={{
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px'
+  }}>
+    <h4 style={{ 
+      margin: '0', 
+      color: '#333', 
+      fontSize: '18px',
+      fontWeight: '600'
+    }}>
+      Statistiques
+    </h4>
+    
+    {/* Navigation - seulement visible s'il y a plus d'utilisateurs que itemsPerPage */}
+    {userLines.length > itemsPerPage && (
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        alignItems: 'center'
+      }}>
+        <button
+          style={{
+            padding: '8px 12px',
+            backgroundColor: currentPage > 0 ? '#007bff' : '#e9ecef',
+            color: currentPage > 0 ? 'white' : '#6c757d',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: currentPage > 0 ? 'pointer' : 'not-allowed',
+            fontSize: '12px',
+            fontWeight: '500',
+            transition: 'all 0.2s ease'
+          }}
+          onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+          disabled={currentPage === 0}
+        >
+          ← Précédent
+        </button>
+        
+        <span style={{
+          fontSize: '12px',
+          color: '#666',
+          padding: '0 8px'
         }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '20px'
-          }}>
-            <h4 style={{ 
-              margin: '0', 
-              color: '#333', 
-              fontSize: '18px',
-              fontWeight: '600'
-            }}>
-              Statistiques Utilisateurs
-            </h4>
-            
-            {/* Navigation */}
-            {userLines.length > itemsPerPage && (
-              <div style={{
-                display: 'flex',
-                gap: '8px',
-                alignItems: 'center'
-              }}>
-                <button
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: currentPage > 0 ? '#007bff' : '#e9ecef',
-                    color: currentPage > 0 ? 'white' : '#6c757d',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: currentPage > 0 ? 'pointer' : 'not-allowed',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                  disabled={currentPage === 0}
-                >
-                  ← Précédent
-                </button>
-                
-                <span style={{
-                  fontSize: '12px',
-                  color: '#666',
-                  padding: '0 8px'
-                }}>
-                  {currentPage + 1} / {Math.ceil(userLines.length / itemsPerPage)}
-                </span>
-                
-                <button
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: currentPage < Math.ceil(userLines.length / itemsPerPage) - 1 ? '#007bff' : '#e9ecef',
-                    color: currentPage < Math.ceil(userLines.length / itemsPerPage) - 1 ? 'white' : '#6c757d',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: currentPage < Math.ceil(userLines.length / itemsPerPage) - 1 ? 'pointer' : 'not-allowed',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onClick={() => setCurrentPage(Math.min(Math.ceil(userLines.length / itemsPerPage) - 1, currentPage + 1))}
-                  disabled={currentPage >= Math.ceil(userLines.length / itemsPerPage) - 1}
-                >
-                  Suivant →
-                </button>
-              </div>
-            )}
-          </div>
-          
-          {/* Cercles horizontaux */}
-          <div style={{
-            display: 'flex',
-            gap: '20px',
-            justifyContent: userLines.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).length < 3 ? 'center' : 'space-between',
-            alignItems: 'center',
-            minHeight: '180px',
-            padding: '10px 0'
-          }}>
-            {userLines
-              .slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
-              .map((userLine) => (
-                <CircleGauge key={userLine.key} userLine={userLine} size={120} />
-              ))}
-          </div>
-          
-          {/* Indicateurs de pagination */}
-          {userLines.length > itemsPerPage && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '6px',
-              marginTop: '16px'
-            }}>
-              {Array.from({ length: Math.ceil(userLines.length / itemsPerPage) }, (_, index) => (
-                <button
-                  key={index}
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    border: 'none',
-                    backgroundColor: index === currentPage ? '#007bff' : '#e9ecef',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onClick={() => setCurrentPage(index)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+          {currentPage + 1} / {Math.ceil((userLines.length) / itemsPerPage)}
+        </span>
+        
+        <button
+          style={{
+            padding: '8px 12px',
+            backgroundColor: currentPage < Math.ceil((userLines.length) / itemsPerPage) - 1 ? '#007bff' : '#e9ecef',
+            color: currentPage < Math.ceil((userLines.length) / itemsPerPage) - 1 ? 'white' : '#6c757d',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: currentPage < Math.ceil((userLines.length) / itemsPerPage) - 1 ? 'pointer' : 'not-allowed',
+            fontSize: '12px',
+            fontWeight: '500',
+            transition: 'all 0.2s ease'
+          }}
+          onClick={() => setCurrentPage(Math.min(Math.ceil((userLines.length) / itemsPerPage) - 1, currentPage + 1))}
+          disabled={currentPage >= Math.ceil((userLines.length) / itemsPerPage) - 1}
+        >
+          Suivant →
+        </button>
+      </div>
+    )}
+  </div>
+  
+  {/* Conteneur principal pour les cercles */}
+  <div style={{
+    display: 'flex',
+    gap: '20px',
+    alignItems: 'center',
+    minHeight: '200px'
+  }}>
+    {/* Cercle global - toujours visible */}
+    <GlobalSummaryCircle globalStats={calculateGlobalStats()} size={140} />
+    
+    {/* Séparateur visuel */}
+    <div style={{
+      height: '120px',
+      width: '1px',
+      backgroundColor: '#e0e0e0',
+      margin: '0 10px'
+    }}></div>
+    
+    {/* Cercles des utilisateurs avec pagination */}
+    <div style={{
+      display: 'flex',
+      gap: '20px',
+      flex: 1,
+      justifyContent: userLines.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).length < 3 ? 'center' : 'flex-start',
+      alignItems: 'center',
+      overflow: 'hidden'
+    }}>
+      {userLines
+        .slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
+        .map((userLine) => (
+          <CircleGauge key={userLine.key} userLine={userLine} size={100} />
+        ))}
+    </div>
+  </div>
+  
+  {/* Indicateurs de pagination */}
+  {userLines.length > itemsPerPage && (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '6px',
+      marginTop: '16px'
+    }}>
+      {Array.from({ length: Math.ceil(userLines.length / itemsPerPage) }, (_, index) => (
+        <button
+          key={index}
+          style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            border: 'none',
+            backgroundColor: index === currentPage ? '#007bff' : '#e9ecef',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+          onClick={() => setCurrentPage(index)}
+        />
+      ))}
+    </div>
+  )}
+</div>
       </div>
 
       <div style={{ 

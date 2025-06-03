@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FaEdit, FaTrash, FaEye, FaPlus, FaSearch, FaSort, FaFilter, FaChevronDown, FaChevronUp, FaTimes, FaSave, FaDownload, FaFileExcel, FaFileCsv, FaFileCode } from 'react-icons/fa';
+import { FaEdit, FaTrash , FaPlus, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaTimes, FaSave, FaDownload, FaFileExcel, FaFileCsv, FaFileCode } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ClientForm from './ClientForm';
 import '../styles/ClientList.css';
 import '../styles/Modal.css';
 
@@ -23,7 +22,7 @@ const ClientList = () => {
   const [uniqueManagers, setUniqueManagers] = useState([]);
   
   // États pour les modals
-  const [showViewModal, setShowViewModal] = useState(false);
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [editFormData, setEditFormData] = useState({});
@@ -202,24 +201,66 @@ const ClientList = () => {
     }));
   };
 
-  const resetExportFilters = () => {
-    setExportFilters({
-      status: '',
-      startDate: '',
-      endDate: ''
-    });
-  };
+ 
 
   const handleEdit = (client) => {
-    setSelectedClient(client);
-    setEditFormData({ ...initialClientData, ...client });
-    setShowEditModal(true);
+    console.log('Client data received:', client);
+  setSelectedClient(client);
+  
+  // Préparer les données avec des valeurs par défaut pour tous les champs
+  const fullClientData = {
+    // Informations de base
+    nom: client.nom || '',
+    email: client.email || '',
+    formeJuridique: client.formeJuridique || '',
+    nomCommercial: client.nomCommercial || '',
+    numeroRCS: client.numeroRCS || '',
+    siret: client.siret || '',
+    codeAPE: client.codeAPE || '',
+    nomPrenom: client.nomPrenom || '',
+    dateCreation: client.dateCreation || '',
+    manager: client.manager || '',
+    adresseSiege: client.adresseSiege || '',
+    capitaleSocial: client.capitaleSocial || '',
+    dateCloture: client.dateCloture || '',
+    inscriptionRM: client.inscriptionRM || '',
+    
+    // Fiche client
+    paie: client.paie || false,
+    datePremierBilan: client.datePremierBilan || '',
+    dateDebutMission: client.dateDebutMission || '',
+    dateCulture: client.dateCulture || '',
+    regimeTVA: client.regimeTVA || 'Réel normal',
+    regimeIS: client.regimeIS || 'Réel normal',
+    jourTVA: client.jourTVA || '',
+    typeTVA: client.typeTVA || 'Débit',
+    dateContrat: client.dateContrat || '',
+    dateContratCN2C: client.dateContratCN2C || '',
+    compteFiscale: client.compteFiscale || false,
+    
+    // Bilan
+    regimeTVABilan: client.regimeTVABilan || 'Réel normal',
+    regimeISBilan: client.regimeISBilan || 'Réel normal',
+    dateDebut: client.dateDebut || '',
+    dateFin: client.dateFin || '',
+    dateEcheance: client.dateEcheance || '',
+    totalieBilan: client.totalieBilan || '',
+    chiffreAffaire: client.chiffreAffaire || '',
+    resultat: client.resultat || '',
+    
+    // Organismes
+    nomOrganisme: client.nomOrganisme || 'Impôt',
+    siteWeb: client.siteWeb || '',
+    login: client.login || '',
+    motDePasse: client.motDePasse || '',
+    commentaire: client.commentaire || ''
   };
+  
+  setEditFormData(fullClientData);
+  setShowEditModal(true);
+};
 
-  const handleView = (client) => {
-    setSelectedClient(client);
-    setShowViewModal(true);
-  };
+  
 
   const handleDelete = async (clientId) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce client?')) {
@@ -282,7 +323,6 @@ const ClientList = () => {
   };
 
   const handleCloseModal = () => {
-    setShowViewModal(false);
     setShowEditModal(false);
     setShowExportModal(false);
     setSelectedClient(null);
@@ -346,12 +386,7 @@ const ClientList = () => {
     );
   };
 
-  const renderViewField = (label, value) => (
-    <div className="detail-row">
-      <span className="detail-label">{label}:</span>
-      <span className="detail-value">{value || 'N/A'}</span>
-    </div>
-  );
+
 
   return (
     <div className="client-list-container">
@@ -491,9 +526,7 @@ const ClientList = () => {
                   <td>{client.manager || 'Non défini'}</td>
                   <td>{formatDisplayDate(client.dateCreation)}</td>
                   <td className="actions-cell">
-                    <button className="action-button view" onClick={() => handleView(client)} title="Voir les détails">
-                      <FaEye />
-                    </button>
+        
                     <button className="action-button edit" onClick={() => handleEdit(client)} title="Modifier">
                       <FaEdit />
                     </button>
@@ -604,90 +637,7 @@ const ClientList = () => {
         </div>
       )}
 
-      {/* Modal pour visualiser un client */}
-      {showViewModal && selectedClient && (
-        <div className="modal-overlay">
-          <div className="modal large-modal">
-            <div className="modal-header">
-              <h2>Détails du client - {selectedClient.nom}</h2>
-              <button className="modal-close" onClick={handleCloseModal}>
-                <FaTimes />
-              </button>
-            </div>
-            <div className="modal-content">
-              <div className="client-details">
-                <div className="section">
-                  <h3>Informations de base</h3>
-                  <div className="details-grid">
-                    {renderViewField('Nom du client', selectedClient.nom)}
-                    {renderViewField('Email', selectedClient.email)}
-                    {renderViewField('Forme juridique', selectedClient.formeJuridique)}
-                    {renderViewField('Nom commercial', selectedClient.nomCommercial)}
-                    {renderViewField('Numéro RCS', selectedClient.numeroRCS)}
-                    {renderViewField('SIRET', selectedClient.siret)}
-                    {renderViewField('Code APE', selectedClient.codeAPE)}
-                    {renderViewField('Nom & Prénom', selectedClient.nomPrenom)}
-                    {renderViewField('Date de création', formatDisplayDate(selectedClient.dateCreation))}
-                    {renderViewField('Manager', selectedClient.manager)}
-                    {renderViewField('Adresse siège', selectedClient.adresseSiege)}
-                    {renderViewField('Capitale social', selectedClient.capitaleSocial)}
-                    {renderViewField('Date de clôture', formatDisplayDate(selectedClient.dateCloture))}
-                    {renderViewField('Inscription RM', formatDisplayDate(selectedClient.inscriptionRM))}
-                  </div>
-                </div>
-
-                <div className="section">
-                  <h3>Fiche client</h3>
-                  <div className="details-grid">
-                    {renderViewField('Paie', selectedClient.paie ? 'Oui' : 'Non')}
-                    {renderViewField('Date premier bilan', formatDisplayDate(selectedClient.datePremierBilan))}
-                    {renderViewField('Date début mission', formatDisplayDate(selectedClient.dateDebutMission))}
-                    {renderViewField('Date culture', formatDisplayDate(selectedClient.dateCulture))}
-                    {renderViewField('Régime TVA', selectedClient.regimeTVA)}
-                    {renderViewField('Régime IS', selectedClient.regimeIS)}
-                    {renderViewField('Jour TVA', formatDisplayDate(selectedClient.jourTVA))}
-                    {renderViewField('Type TVA', selectedClient.typeTVA)}
-                    {renderViewField('Date contrat', formatDisplayDate(selectedClient.dateContrat))}
-                    {renderViewField('Date contrat CN2C', formatDisplayDate(selectedClient.dateContratCN2C))}
-                    {renderViewField('Compte fiscale', selectedClient.compteFiscale ? 'Oui' : 'Non')}
-                  </div>
-                </div>
-
-                <div className="section">
-                  <h3>Bilan</h3>
-                  <div className="details-grid">
-                    {renderViewField('Régime TVA', selectedClient.regimeTVABilan)}
-                    {renderViewField('Régime IS', selectedClient.regimeISBilan)}
-                    {renderViewField('Date de début', formatDisplayDate(selectedClient.dateDebut))}
-                    {renderViewField('Date de fin', formatDisplayDate(selectedClient.dateFin))}
-                    {renderViewField('Date d\'échéance', formatDisplayDate(selectedClient.dateEcheance))}
-                    {renderViewField('Totale bilan', selectedClient.totalieBilan)}
-                    {renderViewField('Chiffre d\'affaire', selectedClient.chiffreAffaire)}
-                    {renderViewField('Résultat', selectedClient.resultat)}
-                  </div>
-                </div>
-
-                <div className="section">
-                  <h3>Organismes</h3>
-                  <div className="details-grid">
-                    {renderViewField('Nom', selectedClient.nomOrganisme)}
-                    {renderViewField('Site web', selectedClient.siteWeb)}
-                    {renderViewField('Login', selectedClient.login)}
-                    {renderViewField('Mot de passe', selectedClient.motDePasse)}
-                    {renderViewField('Commentaire', selectedClient.commentaire)}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-close" onClick={handleCloseModal}>
-                Fermer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      
       {/* Modal pour éditer un client */}
       {showEditModal && selectedClient && (
         <div className="modal-overlay">
