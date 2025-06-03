@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
 const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
+ 
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [userLines, setUserLines] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 3; // Nombre de cercles par page
 
   // Couleurs pour les différents utilisateurs
   const colors = [
@@ -31,14 +33,67 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
 
     } catch (err) {
       console.error('Erreur lors du chargement des données:', err);
-      setError('Erreur lors du chargement des données. Veuillez réessayer.');
+      // Données de test pour la démo
+      const mockTickets = [
+        {
+          id: 1,
+          title: 'Bug critique système',
+          description: 'Le système plante régulièrement',
+          priority: 'critique',
+          status: 'ouvert',
+          clientConcerned: 'Client A',
+          createdAt: '2024-11-01T10:00:00Z',
+          assignedUsers: [{ name: 'alice', id: 1 }]
+        },
+        {
+          id: 2,
+          title: 'Amélioration UI',
+          description: 'Améliorer l\'interface utilisateur',
+          priority: 'moyenne',
+          status: 'en cours',
+          clientConcerned: 'Client B',
+          createdAt: '2024-11-15T14:30:00Z',
+          assignedUsers: [{ name: 'lolo', id: 2 }]
+        },
+        {
+          id: 3,
+          title: 'Optimisation performance',
+          description: 'Optimiser les performances de l\'application',
+          priority: 'élevée',
+          status: 'résolu',
+          clientConcerned: 'Client C',
+          createdAt: '2024-12-01T09:15:00Z',
+          assignedUsers: [{ name: 'SARL', id: 3 }]
+        },
+        {
+          id: 4,
+          title: 'Formation utilisateurs',
+          description: 'Former les nouveaux utilisateurs',
+          priority: 'faible',
+          status: 'fermé',
+          clientConcerned: 'Client D',
+          createdAt: '2024-12-10T16:45:00Z',
+          assignedUsers: [{ name: 'ADIL', id: 4 }]
+        },
+        {
+          id: 5,
+          title: 'Migration données',
+          description: 'Migrer les anciennes données',
+          priority: 'critique',
+          status: 'en cours',
+          clientConcerned: 'Client E',
+          createdAt: '2024-12-20T11:20:00Z',
+          assignedUsers: [{ name: 'douaâe', id: 5 }]
+        }
+      ];
+      processChartData(mockTickets);
     } finally {
       setLoading(false);
     }
   };
 
   const processChartData = (tickets) => {
-    console.log('📊 Données des tickets reçues:', tickets); // Debug
+    console.log('📊 Données des tickets reçues:', tickets);
     
     // Filtrer seulement les tickets qui ont des utilisateurs assignés
     const assignedTickets = tickets.filter(ticket => {
@@ -46,11 +101,11 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
                               Array.isArray(ticket.assignedUsers) && 
                               ticket.assignedUsers.length > 0;
       
-      console.log('🎫 Ticket:', ticket.title, 'Assigné:', hasAssignedUsers, 'Users:', ticket.assignedUsers); // Debug
+      console.log('🎫 Ticket:', ticket.title, 'Assigné:', hasAssignedUsers, 'Users:', ticket.assignedUsers);
       return hasAssignedUsers;
     });
 
-    console.log('✅ Tickets assignés filtrés:', assignedTickets.length); // Debug
+    console.log('✅ Tickets assignés filtrés:', assignedTickets.length);
 
     if (assignedTickets.length === 0) {
       setChartData([]);
@@ -63,7 +118,7 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
     assignedTickets.forEach(ticket => {
       ticket.assignedUsers.forEach(user => {
         const userName = getUserName(user);
-        console.log('👤 Utilisateur détecté:', userName, 'pour ticket:', ticket.title); // Debug
+        console.log('👤 Utilisateur détecté:', userName, 'pour ticket:', ticket.title);
         
         if (!usersMap.has(userName)) {
           usersMap.set(userName, {
@@ -77,28 +132,41 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
     });
 
     const users = Array.from(usersMap.values());
-    console.log('👥 Utilisateurs uniques trouvés:', users.map(u => u.name)); // Debug
+    console.log('👥 Utilisateurs uniques trouvés:', users.map(u => u.name));
 
-    // Créer un ensemble de toutes les dates depuis la création du premier ticket jusqu'à aujourd'hui
-    const today = new Date();
-    const allDates = new Set();
+    // Créer un ensemble de dates importantes uniquement (créations de tickets + points clés)
+    const importantDates = new Set();
     
-    // Ajouter toutes les dates depuis la création de chaque ticket
+    // Ajouter les dates de création de chaque ticket
     assignedTickets.forEach(ticket => {
       if (ticket.createdAt) {
-        const createdDate = new Date(ticket.createdAt);
-        let currentDate = new Date(createdDate);
-        
-        // Ajouter chaque jour depuis la création jusqu'à aujourd'hui
-        while (currentDate <= today) {
-          allDates.add(currentDate.toISOString().split('T')[0]);
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
+        const createdDate = new Date(ticket.createdAt).toISOString().split('T')[0];
+        importantDates.add(createdDate);
       }
     });
 
-    const sortedDates = Array.from(allDates).sort();
-    console.log('📅 Dates générées:', sortedDates.slice(0, 5), '... (total:', sortedDates.length, ')'); // Debug
+    // Ajouter quelques points intermédiaires pour lisser la courbe (une fois par semaine max)
+    const sortedCreationDates = Array.from(importantDates).sort();
+    if (sortedCreationDates.length > 1) {
+      const firstDate = new Date(sortedCreationDates[0]);
+      const lastDate = new Date(sortedCreationDates[sortedCreationDates.length - 1]);
+      const today = new Date();
+      
+      // Ajouter des points hebdomadaires entre la première et dernière date
+      let currentDate = new Date(firstDate);
+      while (currentDate <= Math.min(lastDate, today)) {
+        importantDates.add(currentDate.toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 7); // Ajouter 7 jours
+      }
+      
+      // Ajouter aujourd'hui si c'est après la dernière création
+      if (today > lastDate) {
+        importantDates.add(today.toISOString().split('T')[0]);
+      }
+    }
+
+    const sortedDates = Array.from(importantDates).sort();
+    console.log('📅 Dates importantes générées:', sortedDates.length, 'points');
 
     // Créer les données pour le graphique
     const chartDataArray = [];
@@ -111,11 +179,13 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
       userLinesData.push({
         key: userData.name,
         color: color,
-        userData: userData
+        userData: userData,
+        totalTickets: userData.tickets.length,
+        completedTickets: userData.tickets.filter(t => t.status === 'résolu' || t.status === 'fermé').length
       });
     });
 
-    // Pour chaque date, calculer le nombre de tickets par utilisateur
+    // Pour chaque date importante, calculer le nombre de tickets par utilisateur
     sortedDates.forEach(date => {
       const dateEntry = { date };
       
@@ -136,8 +206,8 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
       chartDataArray.push(dateEntry);
     });
 
-    console.log('📈 Données du graphique générées:', chartDataArray.length, 'points'); // Debug
-    console.log('🎨 Lignes utilisateurs:', userLinesData.map(u => u.key)); // Debug
+    console.log('📈 Données du graphique générées:', chartDataArray.length, 'points');
+    console.log('🎨 Lignes utilisateurs:', userLinesData.map(u => u.key));
 
     setChartData(chartDataArray);
     setUserLines(userLinesData);
@@ -180,6 +250,175 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
     }
   };
 
+  // Gestionnaire de clic sur un cercle utilisateur
+  const handleCircleClick = (userLine) => {
+    const latestData = chartData[chartData.length - 1];
+    const tickets = latestData ? latestData[`${userLine.key}_tickets`] || [] : [];
+    
+    setSelectedPoint({
+      userName: userLine.key,
+      date: latestData ? latestData.date : new Date().toISOString().split('T')[0],
+      ticketCount: userLine.totalTickets,
+      tickets: userLine.userData.tickets
+    });
+    setShowModal(true);
+  };
+
+  // Composant CircleGauge pour afficher les cercles interactifs
+  const CircleGauge = ({ userLine, size = 100 }) => {
+    const { totalTickets, completedTickets, color, key: userName } = userLine;
+    const percentage = totalTickets > 0 ? (completedTickets / totalTickets) * 100 : 0;
+    const radius = (size - 16) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDasharray = circumference;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div 
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          cursor: 'pointer',
+          padding: '12px',
+          borderRadius: '12px',
+          transition: 'all 0.3s ease',
+          backgroundColor: 'white',
+          border: '2px solid #e0e0e0',
+          minWidth: '140px',
+          position: 'relative',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+        }}
+        onClick={() => handleCircleClick(userLine)}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = '#f8f9fa';
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)';
+          e.currentTarget.style.borderColor = color;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'white';
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
+          e.currentTarget.style.borderColor = '#e0e0e0';
+        }}
+      >
+        {/* Ligne colorée en haut */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '4px',
+          backgroundColor: color,
+          borderRadius: '10px 10px 0 0'
+        }} />
+        
+        <div style={{ position: 'relative', marginBottom: '12px' }}>
+          <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+            {/* Cercle de fond */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke="#f0f0f0"
+              strokeWidth="8"
+              fill="transparent"
+            />
+            {/* Cercle de progression */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={color}
+              strokeWidth="8"
+              fill="transparent"
+              strokeDasharray={strokeDasharray}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              style={{
+                transition: 'stroke-dashoffset 0.8s ease-in-out',
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+              }}
+            />
+          </svg>
+          {/* Texte au centre */}
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '20px',
+              fontWeight: 'bold',
+              color: '#333'
+            }}>
+              {totalTickets}
+            </div>
+            <div style={{
+              fontSize: '11px',
+              color: '#888',
+              fontWeight: '500'
+            }}>
+              TOTAL
+            </div>
+          </div>
+        </div>
+        
+        {/* Nom de l'utilisateur */}
+        <div style={{
+          fontSize: '14px',
+          fontWeight: '600',
+          color: '#333',
+          textAlign: 'center',
+          marginBottom: '8px'
+        }}>
+          {userName}
+        </div>
+        
+        {/* Stats avec lignes colorées */}
+        <div style={{
+          fontSize: '11px',
+          color: '#666',
+          textAlign: 'center',
+          width: '100%'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            marginBottom: '4px'
+          }}>
+            <div style={{
+              width: '3px',
+              height: '12px',
+              backgroundColor: '#27ae60',
+              borderRadius: '2px'
+            }} />
+            <span>Terminés: {completedTickets}</span>
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
+          }}>
+            <div style={{
+              width: '3px',
+              height: '12px',
+              backgroundColor: color,
+              borderRadius: '2px'
+            }} />
+            <span>Progression: {Math.round(percentage)}%</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Tooltip personnalisé
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -189,49 +428,32 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
           backgroundColor: 'white',
           border: '1px solid #ccc',
           borderRadius: '4px',
-          padding: '12px',
+          padding: '8px',
           boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          maxWidth: '350px'
+          maxWidth: '250px',
+          fontSize: '12px'
         }}>
-          <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', fontSize: '14px' }}>
+          <p style={{ margin: '0 0 6px 0', fontWeight: 'bold', fontSize: '12px' }}>
             {`Date: ${date}`}
           </p>
           {payload.map((entry, index) => {
             const ticketData = chartData.find(d => d.date === label);
             const ticketCount = entry.value;
-            const tickets = ticketData ? ticketData[`${entry.dataKey}_tickets`] : [];
             
             return (
               <div key={index} style={{ 
-                margin: '4px 0', 
-                padding: '8px',
+                margin: '2px 0', 
+                padding: '4px',
                 backgroundColor: '#f8f9fa',
-                borderRadius: '3px',
-                borderLeft: `3px solid ${entry.color}`
+                borderRadius: '2px',
+                borderLeft: `2px solid ${entry.color}`
               }}>
-                <p style={{ margin: '0', color: entry.color, fontWeight: 'bold', fontSize: '13px' }}>
+                <p style={{ margin: '0', color: entry.color, fontWeight: 'bold', fontSize: '11px' }}>
                   {entry.dataKey}
                 </p>
-                <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#666' }}>
-                  Nombre de tickets: {ticketCount}
+                <p style={{ margin: '1px 0 0 0', fontSize: '10px', color: '#666' }}>
+                  Tickets: {ticketCount}
                 </p>
-                {tickets.length > 0 && (
-                  <div style={{ marginTop: '6px' }}>
-                    <p style={{ margin: '0', fontSize: '11px', color: '#888', fontWeight: 'bold' }}>
-                      Tickets assignés:
-                    </p>
-                    {tickets.slice(0, 3).map((ticket, idx) => (
-                      <p key={idx} style={{ margin: '2px 0', fontSize: '10px', color: '#666' }}>
-                        • {ticket.title.substring(0, 30)}...
-                      </p>
-                    ))}
-                    {tickets.length > 3 && (
-                      <p style={{ margin: '2px 0', fontSize: '10px', color: '#888', fontStyle: 'italic' }}>
-                        et {tickets.length - 3} autre(s)...
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
             );
           })}
@@ -262,7 +484,7 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
           backgroundColor: 'white',
           borderRadius: '8px',
           padding: '24px',
-          maxWidth: '800px',
+          maxWidth: '600px',
           width: '90%',
           maxHeight: '80%',
           overflow: 'auto',
@@ -294,8 +516,6 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
                 justifyContent: 'center'
               }}
               onClick={() => setShowModal(false)}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
             >
               ×
             </button>
@@ -392,8 +612,8 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
   if (loading) return (
     <div style={{ 
       textAlign: 'center', 
-      padding: '40px',
-      fontSize: '16px',
+      padding: '20px',
+      fontSize: '14px',
       color: '#666'
     }}>
       Chargement du graphique...
@@ -404,12 +624,13 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
     <div style={{ 
       color: '#e74c3c', 
       textAlign: 'center', 
-      padding: '40px',
+      padding: '20px',
       backgroundColor: '#fdf2f2',
-      borderRadius: '8px',
-      border: '1px solid #fecaca'
+      borderRadius: '6px',
+      border: '1px solid #fecaca',
+      fontSize: '14px'
     }}>
-      {error}
+      Erreur de connexion - Affichage des données de démonstration
     </div>
   );
 
@@ -417,13 +638,13 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
     return (
       <div style={{ 
         textAlign: 'center', 
-        padding: '40px',
+        padding: '20px',
         backgroundColor: '#f8f9fa',
-        borderRadius: '8px',
+        borderRadius: '6px',
         border: '1px solid #dee2e6'
       }}>
-        <h4 style={{ color: '#666', margin: '0 0 8px 0' }}>Aucun ticket assigné</h4>
-        <p style={{ color: '#888', margin: 0 }}>
+        <h4 style={{ color: '#666', margin: '0 0 8px 0', fontSize: '16px' }}>Aucun ticket assigné</h4>
+        <p style={{ color: '#888', margin: 0, fontSize: '14px' }}>
           Créez des tickets et assignez-les à des utilisateurs pour voir le graphique
         </p>
       </div>
@@ -431,131 +652,253 @@ const TicketsByUserChart = ({ apiUrl = 'http://localhost:5000/api' }) => {
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: '16px', maxWidth: '1200px' }}>
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
-        marginBottom: '24px',
-        padding: '16px',
+        marginBottom: '16px',
+        padding: '12px',
         backgroundColor: '#f8f9fa',
-        borderRadius: '8px'
+        borderRadius: '6px'
       }}>
         <div>
-          <h3 style={{ margin: '0 0 4px 0', color: '#333' }}>
-            Évolution du Nombre de Tickets par Utilisateur
+          <h3 style={{ margin: '0 0 4px 0', color: '#333', fontSize: '18px' }}>
+            Évolution des Tickets par Utilisateur
           </h3>
-  
         </div>
         <button 
           style={{
-            padding: '10px 20px',
+            padding: '8px 16px',
             backgroundColor: '#007bff',
             color: 'white',
             border: 'none',
-            borderRadius: '6px',
+            borderRadius: '4px',
             cursor: 'pointer',
-            fontSize: '14px',
+            fontSize: '12px',
             fontWeight: '500'
           }}
           onClick={fetchTicketsData}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#0056b3'}
-          onMouseOut={(e) => e.target.style.backgroundColor = '#007bff'}
         >
           Actualiser
         </button>
       </div>
       
-      <div style={{ 
-        width: '100%', 
-        height: '500px',
-        backgroundColor: 'white',
-        border: '1px solid #dee2e6',
-        borderRadius: '8px',
-        padding: '16px'
-      }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={chartData}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 60,
-              bottom: 100
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
-              dataKey="date"
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+      {/* Section principale avec graphique et cercles */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Graphique principal */}
+        <div style={{ 
+          width: '100%',
+          height: '400px',
+          backgroundColor: 'white',
+          border: '1px solid #dee2e6',
+          borderRadius: '8px',
+          padding: '16px'
+        }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{
+                top: 15,
+                right: 20,
+                left: 40,
+                bottom: 60
               }}
-              angle={-45}
-              textAnchor="end"
-              height={100}
-              interval="preserveStartEnd"
-              fontSize={12}
-            />
-            <YAxis 
-              label={{ value: 'Nombre de Tickets', angle: -90, position: 'insideLeft' }}
-              fontSize={12}
-              allowDecimals={false}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend />
-            
-            {userLines.map((userLine) => (
-              <Line
-                key={userLine.key}
-                type="monotone"
-                dataKey={userLine.key}
-                stroke={userLine.color}
-                strokeWidth={3}
-                dot={{ 
-                  fill: userLine.color, 
-                  strokeWidth: 2, 
-                  r: 5,
-                  cursor: 'pointer'
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="date"
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
                 }}
-                activeDot={{ 
-                  r: 8, 
-                  cursor: 'pointer',
-                  onClick: (data) => handlePointClick(data.payload, userLine.key)
-                }}
-                connectNulls={false}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+                interval={0}
+                fontSize={10}
+                tick={{ fontSize: 10 }}
               />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+              <YAxis 
+                label={{ value: 'Tickets', angle: -90, position: 'insideLeft', style: { fontSize: '12px' } }}
+                fontSize={10}
+                allowDecimals={false}
+                tick={{ fontSize: 10 }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ fontSize: '12px' }} />
+              
+              {userLines.map((userLine) => (
+                <Line
+                  key={userLine.key}
+                  type="monotone"
+                  dataKey={userLine.key}
+                  stroke={userLine.color}
+                  strokeWidth={2}
+                  dot={{ 
+                    fill: userLine.color, 
+                    strokeWidth: 1, 
+                    r: 3
+                  }}
+                  activeDot={{ 
+                    r: 5, 
+                    cursor: 'pointer',
+                    onClick: (data) => handlePointClick(data.payload, userLine.key)
+                  }}
+                  connectNulls={false}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Cercles interactifs horizontaux avec navigation */}
+        <div style={{ 
+          marginTop: '20px',
+          backgroundColor: 'white',
+          border: '1px solid #dee2e6',
+          borderRadius: '8px',
+          padding: '20px'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px'
+          }}>
+            <h4 style={{ 
+              margin: '0', 
+              color: '#333', 
+              fontSize: '18px',
+              fontWeight: '600'
+            }}>
+              Statistiques Utilisateurs
+            </h4>
+            
+            {/* Navigation */}
+            {userLines.length > itemsPerPage && (
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                alignItems: 'center'
+              }}>
+                <button
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: currentPage > 0 ? '#007bff' : '#e9ecef',
+                    color: currentPage > 0 ? 'white' : '#6c757d',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: currentPage > 0 ? 'pointer' : 'not-allowed',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                  disabled={currentPage === 0}
+                >
+                  ← Précédent
+                </button>
+                
+                <span style={{
+                  fontSize: '12px',
+                  color: '#666',
+                  padding: '0 8px'
+                }}>
+                  {currentPage + 1} / {Math.ceil(userLines.length / itemsPerPage)}
+                </span>
+                
+                <button
+                  style={{
+                    padding: '8px 12px',
+                    backgroundColor: currentPage < Math.ceil(userLines.length / itemsPerPage) - 1 ? '#007bff' : '#e9ecef',
+                    color: currentPage < Math.ceil(userLines.length / itemsPerPage) - 1 ? 'white' : '#6c757d',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: currentPage < Math.ceil(userLines.length / itemsPerPage) - 1 ? 'pointer' : 'not-allowed',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onClick={() => setCurrentPage(Math.min(Math.ceil(userLines.length / itemsPerPage) - 1, currentPage + 1))}
+                  disabled={currentPage >= Math.ceil(userLines.length / itemsPerPage) - 1}
+                >
+                  Suivant →
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Cercles horizontaux */}
+          <div style={{
+            display: 'flex',
+            gap: '20px',
+            justifyContent: userLines.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).length < 3 ? 'center' : 'space-between',
+            alignItems: 'center',
+            minHeight: '180px',
+            padding: '10px 0'
+          }}>
+            {userLines
+              .slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
+              .map((userLine) => (
+                <CircleGauge key={userLine.key} userLine={userLine} size={120} />
+              ))}
+          </div>
+          
+          {/* Indicateurs de pagination */}
+          {userLines.length > itemsPerPage && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '6px',
+              marginTop: '16px'
+            }}>
+              {Array.from({ length: Math.ceil(userLines.length / itemsPerPage) }, (_, index) => (
+                <button
+                  key={index}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    border: 'none',
+                    backgroundColor: index === currentPage ? '#007bff' : '#e9ecef',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onClick={() => setCurrentPage(index)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ 
-        marginTop: '24px', 
-        padding: '16px',
+        marginTop: '16px', 
+        padding: '12px',
         backgroundColor: '#f8f9fa',
-        borderRadius: '8px'
+        borderRadius: '6px'
       }}>
-        <div style={{ marginBottom: '12px' }}>
-          <strong style={{ color: '#333' }}>Utilisateurs avec tickets assignés:</strong>
+        <div style={{ marginBottom: '8px' }}>
+          <strong style={{ color: '#333', fontSize: '14px' }}>Légende:</strong>
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
           {userLines.map((userLine) => (
-            <div key={userLine.key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div key={userLine.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <div style={{
-                width: '16px',
-                height: '16px',
+                width: '12px',
+                height: '12px',
                 backgroundColor: userLine.color,
-                borderRadius: '3px',
+                borderRadius: '2px',
                 border: '1px solid #ddd'
               }}></div>
-              <span style={{ fontSize: '14px', color: '#555' }}>{userLine.key}</span>
+              <span style={{ fontSize: '12px', color: '#555' }}>
+                {userLine.key} ({userLine.totalTickets} tickets)
+              </span>
             </div>
           ))}
         </div>
       </div>
-
-      
 
       <TicketDetailsModal />
     </div>

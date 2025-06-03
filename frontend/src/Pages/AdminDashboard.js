@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaPlus, FaDownload } from 'react-icons/fa'; // Supprimé FaUser car non utilisé
+import { FaPlus, FaDownload, FaLock } from 'react-icons/fa';
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import '../styles/AdminDashboard.css';
@@ -17,13 +17,18 @@ import ExportDataForm from '../components/ExportDataForm';
 import TicketsClientChart from '../components/TicketsClientChart';
 import TicketsByUserChart from '../components/TicketsByUserChart';
 
-
 const API_URL = 'http://localhost:5000/api';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ userRole: propUserRole, userPermissions: propUserPermissions, userSections: propUserSections, onLogout }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportType, setExportType] = useState('');
+  
+  // Utiliser les props reçues d'App.js ou les valeurs par défaut
+  const [userRole, setUserRole] = useState(propUserRole || '');
+  const [userInfo, setUserInfo] = useState({});
+  const [userPermissions, setUserPermissions] = useState(propUserPermissions || {});
+
   const [stats, setStats] = useState({
     users: 0,
     tickets: 0,
@@ -38,19 +43,145 @@ const AdminDashboard = () => {
   const [ticketPriorityData, setTicketPriorityData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // Supprimé la variable clients car elle n'était pas utilisée
   const [selectedClientId, setSelectedClientId] = useState(null);
   const [isCreatingClient, setIsCreatingClient] = useState(false);  
 
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Mettre à jour les états locaux quand les props changent
+  useEffect(() => {
+    if (propUserRole) setUserRole(propUserRole);
+    if (propUserPermissions) setUserPermissions(propUserPermissions);
+  }, [propUserRole, propUserPermissions, propUserSections]);
+
+  // Configuration des sections selon le rôle
+  const getSectionsForRole = (role) => {
+    const allSections = [
+      { id: 'dashboard', name: 'Dashboard', icon: '', adminOnly: false },
+      { id: 'users', name: 'User Data', icon: '', adminOnly: true },
+      { id: 'createUser', name: 'Create User', icon: '', adminOnly: true },
+      { id: 'tickets', name: 'Tickets', icon: '', adminOnly: false },
+      { id: 'createTicket', name: 'Create Ticket', icon: '', adminOnly: false },
+      { id: 'clients', name: 'Fiches Clients', icon: '', adminOnly: true },
+      { id: 'prospects', name: 'Prospects', icon: '', adminOnly: false },
+      { id: 'documents', name: 'Documents', icon: '', adminOnly: false }
+    ];
+
+    if (role === 'admin') {
+      return allSections;
+    } else if (role === 'user') {
+      return allSections.filter(section => !section.adminOnly);
+    }
+    
+    return [];
+  };
+
+  // Fonction pour vérifier les permissions
+  const hasPermission = (action) => {
+    return userPermissions[action] || false;
+  };
+
+  // Fonction pour récupérer les informations utilisateur
+  const fetchUserInfo = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        if (onLogout) {
+          onLogout();
+        } else {
+          navigate('/login');
+        }
+        return;
+      }
+
+      // Si les props sont déjà définies, utiliser celles-ci
+      if (propUserRole && propUserPermissions) {
+        setUserRole(propUserRole);
+        setUserPermissions(propUserPermissions);
+        
+        // Récupérer les infos utilisateur du localStorage
+        const userEmail = localStorage.getItem('userEmail');
+        const userId = localStorage.getItem('userId');
+        
+        setUserInfo({
+          userId: userId,
+          email: userEmail,
+          role: propUserRole
+        });
+        return;
+      }
+
+      // Sinon, décoder le token (fallback)
+      const tokenData = JSON.parse(atob(token.split('.')[1]));
+      setUserRole(tokenData.role || 'user');
+      setUserInfo({
+        userId: tokenData.userId,
+        email: tokenData.email,
+        role: tokenData.role || 'user'
+      });
+
+      // Définir les permissions selon le rôle si pas déjà définies
+      if (!propUserPermissions) {
+        const permissions = {
+          admin: {
+            canViewAllUsers: true,
+            canCreateUsers: true,
+            canViewAllTickets: true,
+            canCreateTickets: true,
+            canViewAllClients: true,
+            canViewAllProspects: true,
+            canViewAllDocuments: true
+          },
+          user: {
+            canViewAllUsers: false,
+            canCreateUsers: false,
+            canViewAllTickets: false,
+            canCreateTickets: true,
+            canViewAllClients: false,
+            canViewAllProspects: true,
+            canViewAllDocuments: true
+          }
+        };
+
+        setUserPermissions(permissions[tokenData.role] || permissions.user);
+      }
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des infos utilisateur:', error);
+      if (onLogout) {
+        onLogout();
+      } else {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    }
+  }, [navigate, onLogout, propUserRole, propUserPermissions]);
+
+  // Fonction de déconnexion
+  const handleLogout = () => {
+    console.log('[AdminDashboard] Déconnexion demandée');
+    if (onLogout) {
+      onLogout(); // Utiliser la fonction onLogout d'App.js
+    } else {
+      // Fallback si onLogout n'est pas disponible
+      localStorage.removeItem('token');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userPermissions');
+      localStorage.removeItem('userSections');
+      localStorage.removeItem('userInfo');
+      navigate('/login');
+    }
+  };
+
   // Couleurs pour le pie chart
   const PRIORITY_COLORS = {
-    faible: '#10b9cf',    // vert
+    faible: '#10b9cf',
     moyenne: '#2b6976',   
     élevée: '#f59e0b',    
-    critique: '#7d3c98'   // violet
+    critique: '#7d3c98'
   };
 
   // Modal component pour l'export
@@ -72,7 +203,6 @@ const AdminDashboard = () => {
     );
   };
 
-  // Utilisation de useCallback pour fetchAllStats pour éviter le warning de dépendance
   const fetchAllStats = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -87,17 +217,31 @@ const AdminDashboard = () => {
         'Authorization': `Bearer ${token}`
       };
       
-      const results = await Promise.allSettled([
+      // Adapter les requêtes selon le rôle
+      const requests = [];
+      
+      // Tous les utilisateurs peuvent voir prospects et documents
+      requests.push(
         axios.get(`${API_URL}/prospects`, { headers }),
-        axios.get(`${API_URL}/clients`, { headers }),
-        axios.get(`${API_URL}/users`, { headers }),
         axios.get(`${API_URL}/tickets`, { headers })
-      ]);
+      );
+      
+      // Seuls les admins peuvent voir clients et users
+      if (userRole === 'admin') {
+        requests.push(
+          axios.get(`${API_URL}/clients`, { headers }),
+          axios.get(`${API_URL}/users`, { headers })
+        );
+      }
+      
+      const results = await Promise.allSettled(requests);
       
       const prospectsData = results[0].status === 'fulfilled' ? results[0].value.data : [];
-      const clientsData = results[1].status === 'fulfilled' ? results[1].value.data : [];
-      const usersData = results[2].status === 'fulfilled' ? results[2].value.data : [];
-      const ticketsData = results[3].status === 'fulfilled' ? results[3].value.data : [];
+      const ticketsData = results[1].status === 'fulfilled' ? results[1].value.data : [];
+      const clientsData = userRole === 'admin' && results[2] ? 
+        (results[2].status === 'fulfilled' ? results[2].value.data : []) : [];
+      const usersData = userRole === 'admin' && results[3] ? 
+        (results[3].status === 'fulfilled' ? results[3].value.data : []) : [];
       
       updateStats(prospectsData, clientsData, usersData, ticketsData);
       generateTicketPriorityData(ticketsData);
@@ -106,33 +250,34 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error('Erreur lors du chargement des statistiques:', err);
       if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        handleLogout();
       }
       setError('Erreur lors du chargement des statistiques. Veuillez réessayer.');
       setTicketPriorityData([]);
     } finally {
       setLoading(false);
     }
-  }, []); // Pas de dépendances car toutes les fonctions utilisées sont stables
+  }, [userRole]);
 
   useEffect(() => {
-    fetchAllStats();
+    fetchUserInfo();
+  }, [fetchUserInfo]);
+
+  useEffect(() => {
+    if (userRole) {
+      fetchAllStats();
+    }
     if (location.state && location.state.activeSection) {
       setActiveSection(location.state.activeSection);
     }
-  }, [location, fetchAllStats]); // Maintenant fetchAllStats est inclus dans les dépendances
+  }, [location, fetchAllStats, userRole]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      navigate('/login');
+      handleLogout();
     }
-  }, [navigate]);
-
-  // Supprimé l'useEffect pour fetchClients car la fonction n'était pas utilisée
-
-  console.log('Token:', localStorage.getItem('token'));
+  }, []);
 
   const updateStats = (prospects, clients, users, tickets) => {
     const ouvertTickets = tickets.filter(ticket => 
@@ -178,6 +323,8 @@ const AdminDashboard = () => {
   };
 
   const fetchClients = async () => {
+    if (!hasPermission('canViewAllClients')) return;
+    
     setLoading(true);
     setError(null);
     
@@ -192,13 +339,11 @@ const AdminDashboard = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-      // Supprimé setClients car la variable n'était pas utilisée
       console.log('Clients loaded:', response.data);
     } catch (err) {
       console.error('Erreur lors du chargement des clients:', err);
       if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
+        handleLogout();
       }
       setError('Erreur lors du chargement des clients. Veuillez réessayer.');
     } finally {
@@ -245,6 +390,7 @@ const AdminDashboard = () => {
   };
 
   const handleEditUser = (id) => {
+    if (!hasPermission('canViewAllUsers')) return;
     navigate(`/admin/edit-user/${id}`);
   };
 
@@ -275,23 +421,25 @@ const AdminDashboard = () => {
     fetchAllStats();
   };
 
-  // Supprimé handleClientCreated car il n'était pas utilisé
-
   const handleClientDeleted = () => {
     fetchClients();
     fetchAllStats();
   };
 
-  // Fonction pour ouvrir le modal d'export
   const handleExportClick = (type) => {
     setExportType(type);
     setShowExportModal(true);
   };
 
-  // Fonction pour fermer le modal d'export
   const handleCloseExportModal = () => {
     setShowExportModal(false);
     setExportType('');
+  };
+
+  // Fonction pour vérifier si une section est accessible
+  const isSectionAccessible = (sectionId) => {
+    const visibleSections = getSectionsForRole(userRole);
+    return visibleSections.some(section => section.id === sectionId);
   };
 
   const StatCard = ({ title, value, className = '' }) => (
@@ -369,13 +517,15 @@ const AdminDashboard = () => {
         ) : (
           <>
             <div className="stats-container">
-              <StatCard title="Users" value={stats.users} />
-              <StatCard title="Clients" value={stats.clients} />
+              {hasPermission('canViewAllUsers') && (
+                <StatCard title="Users" value={stats.users} />
+              )}
+              {hasPermission('canViewAllClients') && (
+                <StatCard title="Clients" value={stats.clients} />
+              )}
               <StatCard title="Prospects" value={stats.prospects} />
             </div>
             
-            <div className="charts-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}></div>
-
             <div className="ticket-stats-container">
               <TicketStatCard title="Total Tickets" value={stats.tickets} />
               <TicketStatCard title="Ouvert" value={stats.ouvertTickets} status="ouvert" />
@@ -385,15 +535,17 @@ const AdminDashboard = () => {
             </div>
 
             <div className="chart-card" style={{ flex: '1 1 100%' }}>
-             <div className="chart-card" style={{ flex: '1 1 100%', marginBottom: '20px' }}>
-            <TicketsByUserChart apiUrl={API_URL} />
-          </div>
+              <div className="chart-card" style={{ flex: '1 1 100%', marginBottom: '20px' }}>
+                <TicketsByUserChart apiUrl={API_URL} />
+              </div>
               
-              <TicketsClientChart 
-                apiUrl={API_URL} 
-                chartType="bar" 
-                showMetrics={false} 
-              />
+              {hasPermission('canViewAllClients') && (
+                <TicketsClientChart 
+                  apiUrl={API_URL} 
+                  chartType="bar" 
+                  showMetrics={false} 
+                />
+              )}
             </div>
             
             <div className="charts-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
@@ -417,6 +569,16 @@ const AdminDashboard = () => {
   };
 
   const renderClientsSection = () => {
+    if (!hasPermission('canViewAllClients')) {
+      return (
+        <div className="access-denied">
+          <FaLock size={48} color="#e74c3c" />
+          <h3>Accès refusé</h3>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder aux fiches clients.</p>
+        </div>
+      );
+    }
+
     return (
       <div className="clients-section">
         <h2>Fiches Clients</h2>
@@ -449,6 +611,17 @@ const AdminDashboard = () => {
   };
 
   const renderSection = () => {
+    // Vérifier l'accès à la section
+    if (!isSectionAccessible(activeSection)) {
+      return (
+        <div className="access-denied">
+          <FaLock size={48} color="#e74c3c" />
+          <h3>Accès refusé</h3>
+          <p>Vous n'avez pas les permissions nécessaires pour accéder à cette section.</p>
+        </div>
+      );
+    }
+
     switch (activeSection) {
       case 'dashboard': return renderDashboard();
       case 'users': return (
@@ -493,88 +666,65 @@ const AdminDashboard = () => {
 
   const refreshData = () => {
     fetchAllStats();
-    if (activeSection === 'clients') {
+    if (activeSection === 'clients' && hasPermission('canViewAllClients')) {
       fetchClients();
     }
   };
 
+  const visibleSections = getSectionsForRole(userRole);
+
+  
   return (
-    <div className="admin-container">
-      <div className="admin-sidebar">
-        <div className="sidebar-header">
-          <h1>CRM-MIACORP</h1>
+  <div className={`admin-container ${userRole}`} data-role={userRole}>
+    <div className="admin-sidebar">
+      <div className="sidebar-header">
+        <h1>CRM-MIACORP</h1>
+        <div className="user-info">
+          <p> <strong>{userRole}</strong></p>
+          <p>{userInfo.email}</p>
         </div>
-        <nav className="sidebar-nav">
-          <ul>
-            <li 
-              className={activeSection === 'dashboard' ? 'active' : ''} 
-              onClick={() => setActiveSection('dashboard')}
-            >
-              Dashboard
-            </li>
-            <li 
-              className={activeSection === 'users' ? 'active' : ''} 
-              onClick={() => setActiveSection('users')}
-            >
-              User Data
-            </li>
-            <li 
-              className={activeSection === 'createUser' ? 'active' : ''} 
-              onClick={() => setActiveSection('createUser')}
-            >
-              Create User
-            </li>
-            <li 
-              className={activeSection === 'tickets' ? 'active' : ''} 
-              onClick={() => {
-                setActiveSection('tickets');
-                fetchAllStats();
-              }}
-            >
-              Tickets
-            </li>
-            <li 
-              className={activeSection === 'createTicket' ? 'active' : ''} 
-              onClick={() => setActiveSection('createTicket')}
-            >
-              Create Ticket
-            </li>
-            <li 
-              className={activeSection === 'clients' ? 'active' : ''} 
-              onClick={() => {
-                setActiveSection('clients');
-                fetchAllStats();
-              }}
-            >
-              Fiches Clients
-            </li>
-            <li 
-              className={activeSection === 'prospects' ? 'active' : ''} 
-              onClick={() => {
-                setActiveSection('prospects');
-                fetchAllStats();
-              }}
-            >
-              Prospects
-            </li>
-            <li 
-              className={activeSection === 'documents' ? 'active' : ''} 
-              onClick={() => setActiveSection('documents')}
-            >
-              Documents
-            </li>
-          </ul>
-        </nav>
       </div>
+      <nav className="sidebar-nav">
+        <ul>
+          {visibleSections.map(section => (
+            <li 
+              key={section.id}
+              className={activeSection === section.id ? 'active' : ''} 
+              onClick={() => {
+                setActiveSection(section.id);
+                if (section.id === 'tickets' || section.id === 'clients' || section.id === 'prospects') {
+                  fetchAllStats();
+                }
+              }}
+            >
+              <span className="nav-icon">{section.icon}</span>
+              <span className="nav-text">{section.name}</span>
+            </li>
+          ))}
+        </ul>
+        {/* Bouton de déconnexion ajouté après la liste des sections */}
+        <div className="logout-container">
+          <button className="logout-btn" onClick={handleLogout}>
+            <span className="nav-icon"><FaLock /></span>
+            <span className="nav-text">Log Out</span>
+          </button>
+        </div>
+      </nav>
+    </div>
 
       <div className="admin-content">
         <header className="admin-header">
-          <h2>Admin Dashboard</h2>
+          <h2>
+            {userRole === 'admin' ? 'Admin Dashboard' : 'User Dashboard'}
+            {userRole === 'user' && (
+              <span className="access-badge"> Accès limité</span>
+            )}
+          </h2>
           <div className="user-info">
             <button className="refresh-btn" onClick={refreshData}>
               Rafraîchir les données
             </button>
-            <button className="logout-btn">Logout</button>
+            {/* Suppression du bouton de déconnexion de l'en-tête */}
           </div>
         </header>
         <main className="content-area">
@@ -582,7 +732,6 @@ const AdminDashboard = () => {
         </main>
       </div>
 
-      {/* Modal d'export */}
       <ExportModal 
         isOpen={showExportModal} 
         onClose={handleCloseExportModal} 

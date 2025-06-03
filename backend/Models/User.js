@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Actif', 'Inactif', 'En attente de validation' , 'Suspendu' ,'Supprimé '],
+    enum: ['Actif', 'Inactif', 'En attente de validation', 'Suspendu', 'Supprimé'], // ✅ Espace supprimé après "Supprimé"
     default: 'Actif',
   },
   createdAt: {
